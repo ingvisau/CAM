@@ -181,11 +181,20 @@ subroutine oslo_salt_emis_intr(state, cam_in)
     end do          
 
 
+
+
+
     do n=1,numberOfSaltModes
        cam_in%cflx(:ncol, tracerMap(n)) = numberFlux(:ncol,n)         &  !#/m2/sec
                                        / volumeToNumber(modeMap(n))  &  !==> m3/m2/sec 
                                        * rhopart(tracerMap(n))          !==> kg/m2/sec
     end do
+
+
+! Tuning to reduce sea-salt AOD. Shift from accumulation to coarse mode.
+    cam_in%cflx(:ncol,tracerMap(3)) = cam_in%cflx(:ncol,tracerMap(3)) + 0.5_r8*cam_in%cflx(:ncol,tracerMap(2))   
+
+    cam_in%cflx(:ncol,tracerMap(2)) = 0.5_r8*cam_in%cflx(:ncol,tracerMap(2))  
 
     !totalSaltEmis(:ncol)=0.0_r8
     !do n=1,numberOfSaltModes
