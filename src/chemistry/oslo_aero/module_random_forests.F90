@@ -24,10 +24,13 @@
  MODULE module_random_forests
 
       use micro_mg_utils, only: r8
+      use spmd_utils,     only: masterproc
+      use phys_control,   only: use_simple_phys
+      use cam_abortutils, only: endrun
 
       IMPLICIT NONE
-
-
+      
+      PUBLIC :: sec_ice_readnl
 
       PUBLIC  :: forestbrhm,forestbr,forestall,forestbrds,forestbrwarm,runforest,runforestriv,runforestmulti
 
@@ -64,16 +67,71 @@
       INTEGER, DIMENSION(JBT) :: NRNODES1,NRNODES2,NRNODES3,NRNODES4,NRNODES5
 
       LOGICAL, PUBLIC :: FIRST_RAFSIP = .TRUE.
-
-
+      
+      character(len=256), public :: forestfileALL,forestfileBRDS
+      character(len=256), public :: forestfileBRHM,forestfileBR
+      character(len=256), public :: forestfileBRwarm
  
   CONTAINS
 
 
 !---------------------------------------------------------------------------------------------------------------
+
+
+ subroutine sec_ice_readnl(nlfile)
+       ! Read files needed for random forest tables of seconary ice formation
+    
+   use namelist_utils,  only: find_group_name
+   use units,           only: getunit, freeunit
+   use mpishorthand
+
+   character(len=*), intent(in) :: nlfile  ! filepath for file containing namelist input
+
+
+   ! Local variables
+   integer :: unitn, ierr, i
+   character(len=2) :: suffix
+   character(len=1), pointer   :: ctype(:)
+   character(len=*), parameter :: subname = 'sec_ice_readnl'
+
+
+   namelist /sec_ice_nl/ forestfileALL,    &
+                             forestfileBRDS,   &
+                             forestfileBRHM,   &
+                             forestfileBR,     &
+                             forestfileBRwarm
+
+   if (use_simple_phys) return
+
+
+   if (masterproc) then
+      unitn = getunit()
+      open( unitn, file=trim(nlfile), status='old' )
+      call find_group_name(unitn, 'sec_ice_nl', status=ierr)
+      if (ierr == 0) then
+         read(unitn, sec_ice_nl, iostat=ierr)
+         if (ierr /= 0) then
+            call endrun(subname // ':: ERROR reading namelist')
+         end if
+      end if
+      close(unitn)
+      call freeunit(unitn)
+   end if
+
+#ifdef SPMD
+
+   call mpibcast (forestfileALL,   len(forestfileALL),    mpichar, 0, mpicom)
+   call mpibcast (forestfileBRDS,  len(forestfileBRDS),   mpichar, 0, mpicom)
+   call mpibcast (forestfileBRHM,  len(forestfileBRHM),   mpichar, 0, mpicom)
+   call mpibcast (forestfileBR,    len(forestfileBR),     mpichar, 0, mpicom)
+   call mpibcast (forestfileBRwarm,len(forestfileBRwarm), mpichar, 0, mpicom)
+
+#endif
+end subroutine sec_ice_readnl
+
       SUBROUTINE forestbrhm(jbt,max_nodes1,leftchild1,rightchild1,splitfeat1, &
                                nrnodes1,thresh1,out11,out12,out13)
-
+      use units,           only: getunit, freeunit
       IMPLICIT NONE
 
       INTEGER,intent(in) :: jbt, max_nodes1
@@ -84,15 +142,19 @@
 
       INTEGER :: jb,n
 
+   integer :: unitn, ierr, i
+!      unitn = 137
+      open( 137, file=trim(forestfileBRHM), form='formatted',status='old' )
          !Open the ASCII file
-         OPEN(unit=137,file="forestBRHM.txt",status="old",action="read")
+!         OPEN(unit=137,file="forestBRHM.txt",status="old",action="read")
+!         OPEN(unit=137,file=forestfileBRHM,status="old",action="read")
          DO jb=1,jbt
             read (137,*) nrnodes1(jb)
             read (137,*) (leftchild1(jb,n),rightchild1(jb,n),out11(jb,n),out12(jb,n),out13(jb,n), &
                     & thresh1(jb,n),splitfeat1(jb,n), n=1,nrnodes1(jb))
          ENDDO
          CLOSE(137)
-
+!      call freeunit(unitn)
 
       END subroutine forestbrhm
 !---------------------------------------------------------------------------------------------------------------
@@ -112,7 +174,8 @@
 
       INTEGER :: jb,n
 
-         OPEN(unit=138,file="forestBR.txt",status="old",action="read")
+!         OPEN(unit=138,file="forestBR.txt",status="old",action="read")
+         OPEN(unit=138,file=forestfileBR,status="old",action="read")
          DO jb=1,jbt
             read (138,*) nrnodes2(jb)
             read (138,*) (leftchild2(jb,n),rightchild2(jb,n),out21(jb,n), &
@@ -138,7 +201,8 @@
 
       INTEGER :: jb,n
 
-         OPEN(unit=139,file="forestALL.txt",status="old",action="read")
+!         OPEN(unit=139,file="forestALL.txt",status="old",action="read")
+         OPEN(unit=139,file=forestfileALL,status="old",action="read")
          DO jb=1,jbt
             read (139,*) nrnodes3(jb)
             read (139,*) (leftchild3(jb,n),rightchild3(jb,n),out31(jb,n),out32(jb,n),out33(jb,n), &
@@ -165,7 +229,8 @@
 
       INTEGER :: jb,n
 
-         OPEN(unit=140,file="forestBRDS.txt",status="old",action="read")
+!         OPEN(unit=140,file="forestBRDS.txt",status="old",action="read")
+         OPEN(unit=140,file=forestfileBRDS,status="old",action="read")
          DO jb=1,jbt
             read (140,*) nrnodes4(jb)
             read (140,*) (leftchild4(jb,n),rightchild4(jb,n),out41(jb,n),out42(jb,n),out43(jb,n), &
@@ -191,7 +256,8 @@
 
       INTEGER :: jb,n
 
-         OPEN(unit=141,file="forestBRwarm.txt",status="old",action="read")
+!         OPEN(unit=141,file="forestBRwarm.txt",status="old",action="read")
+         OPEN(unit=141,file=forestfileBRwarm,status="old",action="read")
          DO jb=1,jbt
             read (141,*) nrnodes5(jb)
             read (141,*) (leftchild5(jb,n),rightchild5(jb,n),out51(jb,n), &
