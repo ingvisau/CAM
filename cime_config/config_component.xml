@@ -452,26 +452,26 @@
       <value compset="_CAM60%NORESM%FRC2%1PCT"> flbc_list='CO2','CH4','N2O','CFC11eq','CFC12' </value>
       <!-- fSST NorESM-derived pre-industrial -->
       <value compset="1850_CAM60%NORESM%NORBC" grid="a%0.9x1.25"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850frc2_f09_tn14_20191012_1351-1380_cycle_version20200106.nc' </value>
-      <value compset="1850_CAM60%NORESM%NORBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_20190621_1751-1780_cycle_version20190726.nc' </value>
+      <value compset="1850_CAM60%NORESM%NORBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_Forces_230512_1751-1780_cycle_version20230512.nc' </value>
       <value compset="1850_CAM60%NORESM%NORBC"> dms_cycle_year=1850 </value>
       <value compset="1850_CAM60%NORESM%NORBC"> opom_cycle_year=1850 </value>
       <value compset="1850_CAM60%NORESM%NORBC"> dms_source_type='CYCLICAL' </value>
       <value compset="1850_CAM60%NORESM%NORBC"> opom_source_type='CYCLICAL' </value>
       <!-- NorESM derived preindustrial -->
       <value compset="CAM60%NORESM%NORPIBC" grid="a%0.9x1.25"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850frc2_f09_tn14_20191012_1351-1380_cycle_version20200106.nc' </value>
-      <value compset="CAM60%NORESM%NORPIBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_20190621_1751-1780_cycle_version20190726.nc' </value>
+      <value compset="CAM60%NORESM%NORPIBC" grid="a%1.9x2.5" > ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_N1850_f19_tn14_Forces_230512_1751-1780_cycle_version20230512.nc' </value>
       <value compset="CAM60%NORESM%NORPIBC"> dms_cycle_year=1850 </value>
       <value compset="CAM60%NORESM%NORPIBC"> opom_cycle_year=1850 </value>
       <value compset="CAM60%NORESM%NORPIBC"> dms_source_type='CYCLICAL' </value>
       <value compset="CAM60%NORESM%NORPIBC"> opom_source_type='CYCLICAL' </value>
 
       <!-- NorESM derived evolving -->
-      <value compset="HIST_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_20190625_1849-2015_series_version20190726.nc' </value>
+      <value compset="HIST_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_Forces_230515_1849-2015_series_version20230515.nc' </value>
       <value compset="HIST_CAM60%NORESM%NORBC"> dms_source_type='INTERP_MISSING_MONTHS' </value>
       <value compset="HIST_CAM60%NORESM%NORBC"> opom_source_type='INTERP_MISSING_MONTHS' </value>
 
       <!-- NorESM derived evolving -->
-      <value compset="SSP370_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NSSP370frc2_f19_tn14_20191014_2014-2101_series_version20200109.nc' </value>
+      <value compset="SSP370_CAM60%NORESM%NORBC"> ocean_filename='dms-hamocc-dow-taylor_chlor_a-lanaclim_NHIST_f19_tn14_Forces_230515_1849-2015_series_version20230515.nc' </value>
       <value compset="SSP370_CAM60%NORESM%NORBC"> dms_source_type='INTERP_MISSING_MONTHS' </value>
       <value compset="SSP370_CAM60%NORESM%NORBC"> opom_source_type='INTERP_MISSING_MONTHS' </value>
 
