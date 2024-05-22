@@ -643,7 +643,7 @@ subroutine microp_aero_run ( &
             wsubi(i,k) = min(wsubi(i,k), 0.2_r8)
          endif
 
-         wsub(i,k)  = max(0.20_r8, wsub(i,k))
+         wsub(i,k)  = max(0.20_r8, wsub(i,k)) 
 
       end do
    end do
