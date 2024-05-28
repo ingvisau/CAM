@@ -235,6 +235,16 @@
       DOUBLE PRECISION NACTI, DENOM
       REAL             PDF
 
+      !C Check if temperature is below -50C (modification to work with debug=true, From Oves suggestion 29 Nov 2023)
+      IF (TPARC.LT.223.0) THEN
+            SMAX  = 0d0
+            NACT  = 0d0
+            ACF = 0d0
+            MACF = 0d0
+            RETURN
+      ENDIF
+
+
 !C
 !C *** Single updraft case
 !C
