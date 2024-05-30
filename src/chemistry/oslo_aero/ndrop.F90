@@ -2393,7 +2393,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    character(len=*), parameter :: subname='activate_modal'
    integer m,n
    
-   ! IA 20240530 -- Move BN variable declarations from dropmixnuc
+   ! IA 20240530 -- BN variables 
    !--------------------------------------------------------------
    integer                          :: numberOfModes
    integer                          :: modtype(nmodes) 
