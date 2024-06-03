@@ -2392,6 +2392,23 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8) grow
    character(len=*), parameter :: subname='activate_modal'
    integer m,n
+
+   ! IA: 03/06/2024-----------------------------------------
+   ! BN parameters (moved from dropmixnuc)
+   integer                          :: modtype(nmodes) 
+   real(r8)                         :: sigi(nmodes)
+   real(r8)                         :: A,B,ACCOM
+   real(r8)                         :: SG(nmodes)
+   real(r8)                         :: press
+   real(r8)                         :: DPGI(nmodes)
+   real(r8)                         :: NDACT 
+   real(r8)                         :: SMAX_BN !Renamed with _BN to distinguish from variable that exists in original ARG
+   real(r8)                         :: suma
+   integer                          :: mk
+   real(r8)                         :: actfrac(nmodes)
+   real(r8)                         :: mactfrac(nmodes)
+   ! -----------------------------------------
+
    !      numerical integration parameters
    real(r8), parameter :: eps=0.3_r8,fmax=0.99_r8,sds=3._r8
 
