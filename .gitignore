@@ -18,3 +18,5 @@ buildcppc
 .#*
 \#*#
 *.swp
+src/chemistry/oslo_aero/oslo_aero.code-workspace
+.gitignore
