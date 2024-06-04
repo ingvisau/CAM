@@ -2424,6 +2424,12 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    fluxm(:)=0._r8
    flux_fullact=0._r8
 
+   ! IA: 04/06/2024 -----------------------------------
+   ! BN params
+   actfrac(:) = 0.0_r8
+   mactfrac(:) = 0.0_r8
+   ! --------------------------------------------------
+
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
    if(sigw.le.1.e-5_r8.and.wbar.le.0._r8)return
