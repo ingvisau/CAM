@@ -2407,6 +2407,9 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    integer                          :: mk
    real(r8)                         :: actfrac(nmodes)
    real(r8)                         :: mactfrac(nmodes)
+   real(r8), allocatable            :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
+   integer                          :: modtype(nmodes)
+   real(r8)                         :: sigi(nmodes)
    ! -----------------------------------------
 
    !      numerical integration parameters
@@ -2428,6 +2431,11 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! BN params
    actfrac(:) = 0.0_r8
    mactfrac(:) = 0.0_r8
+
+   hygro_BN(:) = max(hygro(:),0.01_r8)
+   modtype(:) =1 ! BN can choose between two different params.
+
+   sigi(:)=exp(lnsigman(:))
    ! --------------------------------------------------
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
