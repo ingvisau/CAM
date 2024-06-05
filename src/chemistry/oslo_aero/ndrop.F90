@@ -2408,8 +2408,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8)                         :: actfrac(nmodes)
    real(r8)                         :: mactfrac(nmodes)
    real(r8), allocatable            :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
-   integer                          :: modtype(nmodes)
-   real(r8)                         :: sigi(nmodes)
+
    ! -----------------------------------------
 
    !      numerical integration parameters
