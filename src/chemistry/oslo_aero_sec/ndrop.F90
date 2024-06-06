@@ -2393,9 +2393,9 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    character(len=*), parameter :: subname='activate_modal'
    integer m,n
 
-   ! IA 20240606 -- BN variables
+   ! IA 06/06/2024 -- BN variables
    !--------------------------------------------------------------
-   integer                          :: numberOfModes
+  !integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here.
    integer                          :: modtype(nmodes) 
    real(r8)                         :: sigi(nmodes)
    real(r8)                         :: A,B,ACCOM
@@ -2408,7 +2408,10 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    integer                          :: mk
    real(r8)                         :: actfrac(nmodes)
    real(r8)                         :: mactfrac(nmodes)
+   real(r8), allocatable            :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
    ! --------------------------------------------------------------
+
+
 
    !      numerical integration parameters
    real(r8), parameter :: eps=0.3_r8,fmax=0.99_r8,sds=3._r8
@@ -2424,6 +2427,18 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    fluxn(:)=0._r8
    fluxm(:)=0._r8
    flux_fullact=0._r8
+
+   ! IA: 06/06/2024 -----------------------------------
+   ! BN params
+   actfrac(:) = 0.0_r8
+   mactfrac(:) = 0.0_r8
+
+   hygro_BN(:) = max(hygro(:),0.01_r8)
+   modtype(:) =1 ! BN can choose between two different params.
+
+   sigi(:)=exp(lnsigman(:))
+   ! --------------------------------------------------
+
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
