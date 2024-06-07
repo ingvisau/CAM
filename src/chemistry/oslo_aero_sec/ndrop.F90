@@ -1177,21 +1177,17 @@ subroutine dropmixnuc( &
                call activate_modal( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, fn_in(i,k,1:nmodes), fm, fluxn,            &
+               vaerosol, hygro, lnsigman, DPGI, press,              &
+               fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
-#ifdef OSLO_AERO
-               ,lnsigman                                            &
-#endif
                )
             else
                call activate_modal( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, fn, fm, fluxn,                      &
+               vaerosol, hygro, lnsigman, DPGI, press,              &
+               fn, fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
-#ifdef OSLO_AERO
-               ,lnsigman                                            &
-#endif
                )
             end if
 	     !-- MH_2015/04/10
@@ -1355,21 +1351,17 @@ subroutine dropmixnuc( &
                call activate_modal( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, fn_in(i,k,:), fm, fluxn,                      &
+                  vaerosol, hygro, lnsigman, DPGI, press,   &
+                  fn_in(i,k,:), fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
-#ifdef OSLO_AERO
-                  ,lnsigman                                    &
-#endif
                    )
             else
                call activate_modal( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, fn, fm, fluxn,                      &
+                  vaerosol, hygro, lnsigman, DPGI, press,   &
+                  fn, fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
-#ifdef OSLO_AERO
-                  ,lnsigman                                    &
-#endif
                    )
             end if
 		 !-- MH_2015/04/10
