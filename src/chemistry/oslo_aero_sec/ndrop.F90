@@ -2305,7 +2305,7 @@ end subroutine explmix
 !===============================================================================
 
 subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
-   na, nmode, volume, hygro, lnsigman, DPGI, press &
+   na, nmode, volume, hygro, lnsigman, DPGI, press, &
    fn, fm, fluxn, fluxm, flux_fullact)
 
    !      calculates number, surface, and mass fraction of aerosols activated as CCN
@@ -2452,7 +2452,6 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    A=2.25_r8
    B=1.2_r8
    ACCOM=1.0_r8  ! Can be reduced to 0.1, 0.042 (Prup
-   press=287._r8*cs(i,k)*temp(i,k)
    ! --------------------------------------------------
 
 
