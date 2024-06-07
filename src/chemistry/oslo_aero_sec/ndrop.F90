@@ -2411,7 +2411,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8)                         :: A,B,ACCOM
    real(r8)                         :: SG(nmodes)
    !real(r8)                         :: press ! Declared in dropmixnuc, taken as input NB: don't confuse with ARG variable pres.
-   real(r8)                         :: DPGI(nmodes)
+   !real(r8)                         :: DPGI(nmodes)
    real(r8)                         :: NDACT 
    real(r8)                         :: SMAX_BN ! Changed name: SMAX->SMAX_BN, to distinguish from SMAX already existing for ARG
    real(r8)                         :: suma
