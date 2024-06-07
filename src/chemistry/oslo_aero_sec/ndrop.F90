@@ -628,7 +628,13 @@ subroutine dropmixnuc( &
    character(len=2)                 :: modeString
    character(len=20)                :: varname
 #endif
+
+! IA 2024/06/07: BN VARIABLES
+! -------------------------------------------
    integer                              :: numberOfModes
+   real(r8)                         :: press
+   real(r8)                         :: DPGI(nmodes)
+! ---------------------------------------------
 !-------------------------------------------------------------------------------
 #undef EXTRATESTS
 #undef MASS_BALANCE_CHECK
@@ -1146,9 +1152,11 @@ subroutine dropmixnuc( &
          hygro(m) =    hygroscopicity(i,k,kcomp)
          lnsigman(m) = lnsigma(i,k,kcomp)
          speciesMap(m) = kcomp
+         DPGI(m)=2._r8*numberMedianRadius(i,k,kcomp) ! For BN
       end if
    end do
    numberOfModes = m
+   press=287._r8*cs(i,k)*temp(i,k) ! For BN
 #else
          numberOfModes = ntot_amode
             phase = 1 ! interstitial
@@ -2297,8 +2305,8 @@ end subroutine explmix
 !===============================================================================
 
 subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
-   na, nmode, volume, hygro,  &
-   fn, fm, fluxn, fluxm, flux_fullact, lnsigman )
+   na, nmode, volume, hygro, lnsigman, DPGI, press &
+   fn, fm, fluxn, fluxm, flux_fullact)
 
    !      calculates number, surface, and mass fraction of aerosols activated as CCN
    !      calculates flux of cloud droplets, surface area, and aerosol mass into cloud
@@ -2324,7 +2332,9 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    integer,  intent(in) :: nmode      ! number of aerosol modes
    real(r8), intent(in) :: volume(:)  ! aerosol volume concentration (m3/m3)
    real(r8), intent(in) :: hygro(:)   ! hygroscopicity of aerosol mode
-   real(r8), intent(in), optional :: lnsigman(:)
+   real(r8), intent(in), optional :: lnsigman(:) ! BN
+   real(r8), intent(in), optional :: DPGI(:) ! BN
+   real(r8), intent(in), optional :: press ! BN
 
    !      output
 
@@ -2395,12 +2405,12 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
    ! IA 06/06/2024 -- BN variables
    !--------------------------------------------------------------
-  !integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here.
+  !integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here. Use nmode (?)
    integer                          :: modtype(nmodes) 
    real(r8)                         :: sigi(nmodes)
    real(r8)                         :: A,B,ACCOM
    real(r8)                         :: SG(nmodes)
-   real(r8)                         :: press
+   !real(r8)                         :: press ! Declared in dropmixnuc, taken as input NB: don't confuse with ARG variable pres.
    real(r8)                         :: DPGI(nmodes)
    real(r8)                         :: NDACT 
    real(r8)                         :: SMAX_BN ! Changed name: SMAX->SMAX_BN, to distinguish from SMAX already existing for ARG
@@ -2437,6 +2447,12 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    modtype(:) =1 ! BN can choose between two different params.
 
    sigi(:)=exp(lnsigman(:))
+   SG(:)=0.0_r8
+
+   A=2.25_r8
+   B=1.2_r8
+   ACCOM=1.0_r8  ! Can be reduced to 0.1, 0.042 (Prup
+   press=287._r8*cs(i,k)*temp(i,k)
    ! --------------------------------------------------
 
 
