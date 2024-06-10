@@ -1177,7 +1177,7 @@ subroutine dropmixnuc( &
                call activate_modal( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI, press,              &
+               vaerosol, hygro, lnsigman, DPGI, press, naermod,     &
                fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
@@ -1185,7 +1185,7 @@ subroutine dropmixnuc( &
                call activate_modal( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI, press,              &
+               vaerosol, hygro, lnsigman, DPGI, press, naermod,     &
                fn, fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
@@ -1351,7 +1351,7 @@ subroutine dropmixnuc( &
                call activate_modal( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman, DPGI, press,   &
+                  vaerosol, hygro, lnsigman, DPGI, press, naermod,  &
                   fn_in(i,k,:), fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
                    )
@@ -1359,7 +1359,7 @@ subroutine dropmixnuc( &
                call activate_modal( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman, DPGI, press,   &
+                  vaerosol, hygro, lnsigman, DPGI, press, naermod,   &
                   fn, fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
                    )
@@ -2297,7 +2297,7 @@ end subroutine explmix
 !===============================================================================
 
 subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
-   na, nmode, volume, hygro, lnsigman, DPGI, press, &
+   na, nmode, volume, hygro, lnsigman, DPGI, press, naeromod, &
    fn, fm, fluxn, fluxm, flux_fullact)
 
    !      calculates number, surface, and mass fraction of aerosols activated as CCN
@@ -2327,6 +2327,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8), intent(in), optional :: lnsigman(:) ! BN
    real(r8), intent(in), optional :: DPGI(:) ! BN
    real(r8), intent(in), optional :: press ! BN
+   real(r8), intent(in), optional :: naermod(:) ! BN
 
    !      output
 
@@ -2403,7 +2404,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8)                         :: A,B,ACCOM
    real(r8)                         :: SG(nmodes)
    !real(r8)                         :: press ! Declared in dropmixnuc, taken as input NB: don't confuse with ARG variable pres.
-   !real(r8)                         :: DPGI(nmodes)
+   !real(r8)                         :: DPGI(nmodes) ! takem as input
    real(r8)                         :: NDACT 
    real(r8)                         :: SMAX_BN ! Changed name: SMAX->SMAX_BN, to distinguish from SMAX already existing for ARG
    real(r8)                         :: suma
