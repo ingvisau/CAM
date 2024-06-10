@@ -2447,6 +2447,8 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ACCOM=1.0_r8  ! Can be reduced to 0.1, 0.042 (Prup
    ! --------------------------------------------------
 
+   ! IA 10/06/2024: Call to BN routine CCNSPEC
+   CALL CCNSPEC (naermod,DPGI,sigi,modtype,temp(i,k),press,numberOfModes,hygro_BN,A,B,SG)
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
