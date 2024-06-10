@@ -2399,18 +2399,18 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! IA 06/06/2024 -- BN variables
    !--------------------------------------------------------------
   !integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here. Use nmode (?)
-   integer                          :: modtype(nmodes) 
-   real(r8)                         :: sigi(nmodes)
+   integer                          :: modtype(nmode) 
+   real(r8)                         :: sigi(nmode)
    real(r8)                         :: A,B,ACCOM
-   real(r8)                         :: SG(nmodes)
+   real(r8)                         :: SG(nmode)
    !real(r8)                         :: press ! Declared in dropmixnuc, taken as input NB: don't confuse with ARG variable pres.
    !real(r8)                         :: DPGI(nmodes) ! takem as input
    real(r8)                         :: NDACT 
    real(r8)                         :: SMAX_BN ! Changed name: SMAX->SMAX_BN, to distinguish from SMAX already existing for ARG
    real(r8)                         :: suma
    integer                          :: mk
-   real(r8)                         :: actfrac(nmodes)
-   real(r8)                         :: mactfrac(nmodes)
+   real(r8)                         :: actfrac(nmode)
+   real(r8)                         :: mactfrac(nmode)
    real(r8), allocatable            :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
    ! --------------------------------------------------------------
 
@@ -2448,7 +2448,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! --------------------------------------------------
 
    ! IA 10/06/2024: Call to BN routine CCNSPEC
-   CALL CCNSPEC (naermod,DPGI,sigi,modtype,temp(i,k),press,numberOfModes,hygro_BN,A,B,SG)
+   CALL CCNSPEC (naermod,DPGI,sigi,modtype,tair,press,nmode,hygro_BN,A,B,SG)
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
