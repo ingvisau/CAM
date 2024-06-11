@@ -2324,9 +2324,9 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    integer,  intent(in) :: nmode         ! number of aerosol modes
    real(r8), intent(in) :: volume(:)     ! aerosol volume concentration (m3/m3)
    real(r8), intent(in) :: hygro(:)      ! hygroscopicity of aerosol mode
-   real(r8), intent(in) :: lnsigman(:)   ! BN
-   real(r8), intent(in) :: DPGI(:)       ! BN
-   real(r8), intent(in) :: press         ! BN
+   real(r8), intent(in), optional :: lnsigman(:)   ! BN
+   real(r8), intent(in), optional :: DPGI(:)       ! BN
+   real(r8), intent(in), optional :: press         ! BN
    !real(r8), intent(in), optional :: naermod(:) ! BN
 
    !      output
@@ -2448,7 +2448,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! --------------------------------------------------
 
    ! IA 10/06/2024: Call to BN routine CCNSPEC
-   CALL CCNSPEC (naermod,DPGI,sigi,modtype,tair,press,nmode,hygro_BN,A,B,SG)
+   CALL CCNSPEC(na,DPGI,sigi,modtype,tair,press,nmode,hygro_BN,A,B,SG)
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
