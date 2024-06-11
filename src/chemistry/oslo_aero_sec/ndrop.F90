@@ -2411,7 +2411,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    integer                          :: mk
    real(r8)                         :: actfrac(nmode)
    real(r8)                         :: mactfrac(nmode)
-   real(r8), allocatable            :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
+   real(r8)                         :: hygro_BN(:) ! hygroscopicity of aerosol mode for BN
    ! --------------------------------------------------------------
 
 
@@ -2448,7 +2448,12 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! --------------------------------------------------
 
    ! IA 10/06/2024: Call to BN routine CCNSPEC
+   ! ------------------------------------------------------------
+   
    CALL CCNSPEC(na,DPGI,sigi,modtype,tair,press,nmode,hygro_BN,A,B,SG)
+
+   ! -------------------------------------------------------------
+
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
 
