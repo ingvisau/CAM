@@ -2320,13 +2320,13 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8), intent(in) :: wmaxf         ! maximum updraft velocity for integration (m/s)
    real(r8), intent(in) :: tair          ! air temperature (K)
    real(r8), intent(in) :: rhoair        ! air density (kg/m3)
-   real(r8), intent(in) :: na(:)      ! aerosol number concentration (/m3)
-   integer,  intent(in) :: nmode      ! number of aerosol modes
-   real(r8), intent(in) :: volume(:)  ! aerosol volume concentration (m3/m3)
-   real(r8), intent(in) :: hygro(:)   ! hygroscopicity of aerosol mode
-   real(r8), intent(in), optional :: lnsigman(:) ! BN
-   real(r8), intent(in), optional :: DPGI(:) ! BN
-   real(r8), intent(in), optional :: press ! BN
+   real(r8), intent(in) :: na(:)         ! aerosol number concentration (/m3)
+   integer,  intent(in) :: nmode         ! number of aerosol modes
+   real(r8), intent(in) :: volume(:)     ! aerosol volume concentration (m3/m3)
+   real(r8), intent(in) :: hygro(:)      ! hygroscopicity of aerosol mode
+   real(r8), intent(in) :: lnsigman(:)   ! BN
+   real(r8), intent(in) :: DPGI(:)       ! BN
+   real(r8), intent(in) :: press         ! BN
    !real(r8), intent(in), optional :: naermod(:) ! BN
 
    !      output
