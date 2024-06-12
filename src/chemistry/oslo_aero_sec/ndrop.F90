@@ -2450,6 +2450,10 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    ! IA 10/06/2024: Call to BN routine CCNSPEC
    ! ------------------------------------------------------------
    CALL CCNSPEC(na,DPGI,sigi,modtype,tair,press,nmode,hygro_BN,A,B,SG)
+
+   ! IA 12/06/2024: Call to BN routine PDFACTIV
+
+   CALL PDFACTIV (wbar,naermod,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
    
    ! -------------------------------------------------------------
 
