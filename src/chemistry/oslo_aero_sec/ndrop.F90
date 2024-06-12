@@ -2327,7 +2327,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8), intent(in), optional :: lnsigman(:)   ! BN
    real(r8), intent(in), optional :: DPGI(:)       ! BN
    real(r8), intent(in), optional :: press         ! BN
-   !real(r8), intent(in), optional :: naermod(:) ! BN
+   !real(r8), intent(in), optional :: naermod(:) ! BN note: same as na
 
    !      output
 
@@ -2453,7 +2453,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
    ! IA 12/06/2024: Call to BN routine PDFACTIV
 
-   CALL PDFACTIV (wbar,naermod,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
+   CALL PDFACTIV (wbar,na,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
    
    ! -------------------------------------------------------------
 
