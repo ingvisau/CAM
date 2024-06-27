@@ -1044,7 +1044,7 @@
 
 <!-- prescribed oxidants for prognostic aerosol chemistry -->
 <tracer_cnst_file     ver="fixed_ox">oxid_1.9x2.5_L26_1850-2005_c091123.nc</tracer_cnst_file>
-                                              
+
 <!-- prescribed oxidants for prognostic aerosol chemistry -lightweight set for running SCAM and producing SCAM IOP boundary data -->
 <tracer_cnst_file     phys="cam6"  ver="fixed_ox" scam="1">oxid_1.9x2.5_L26_1850clim_c091123.nc</tracer_cnst_file>
 <tracer_cnst_cycle_yr phys="cam6"  ver="fixed_ox" scam="1">1850</tracer_cnst_cycle_yr>
@@ -1377,6 +1377,10 @@
 
 <seasalt_emis_scale  spcam_clubb_sgs="1" phys="spcam_sam1mom"            >1.00D0</seasalt_emis_scale >
 <seasalt_emis_scale  spcam_clubb_sgs="1" phys="spcam_m2005"              >1.00D0</seasalt_emis_scale >
+
+<!-- Aerosol activation -->
+<aerosol_activation_scheme>ARG</aerosol_activation_scheme>
+<aerosol_diagnostic_activation>none</aerosol_diagnostic_activation>
 
 <!-- sub-column switches for physics packages -->
 <use_subcol_microp>.false.</use_subcol_microp>
