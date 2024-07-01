@@ -12,9 +12,9 @@ module microp_aero
 ! Based on code from: Hugh Morrison, Xiaohong Liu and Steve Ghan
 ! May 2010
 ! Description in: Morrison and Gettelman, 2008. J. Climate (MG2008)
-!                 Gettelman et al., 2010 J. Geophys. Res. - Atmospheres (G2010)         
+!                 Gettelman et al., 2010 J. Geophys. Res. - Atmospheres (G2010)
 ! for questions contact Andrew Gettelman  (andrew@ucar.edu)
-! Modifications: A. Gettelman Nov 2010  - changed to support separation of 
+! Modifications: A. Gettelman Nov 2010  - changed to support separation of
 !                  microphysics and macrophysics and concentrate aerosol information here
 !                B. Eaton, Sep 2014 - Refactored to move CAM interface code into the CAM
 !                  interface modules and preserve just the driver layer functionality here.
@@ -33,25 +33,13 @@ use physics_buffer,   only: physics_buffer_desc, pbuf_get_index, pbuf_old_tim_id
 use phys_control,     only: phys_getopts, use_hetfrz_classnuc
 use rad_constituents, only: rad_cnst_get_info, rad_cnst_get_aer_mmr, rad_cnst_get_aer_props, &
                             rad_cnst_get_mode_num
-#ifndef OSLO_AERO
-use nucleate_ice_cam, only: use_preexisting_ice, nucleate_ice_cam_readnl, nucleate_ice_cam_register, &
-                            nucleate_ice_cam_init, nucleate_ice_cam_calc
-#endif
-
 use ndrop,            only: ndrop_init, dropmixnuc
 use ndrop_bam,        only: ndrop_bam_init, ndrop_bam_run, ndrop_bam_ccn
 
-#ifndef OSLO_AERO
-use hetfrz_classnuc_cam, only: hetfrz_classnuc_cam_readnl, hetfrz_classnuc_cam_register, hetfrz_classnuc_cam_init, &
-                               hetfrz_classnuc_cam_save_cbaero, hetfrz_classnuc_cam_calc
-
-#endif
 use cam_history,      only: addfld, add_default, outfld
 use cam_logfile,      only: iulog
 use cam_abortutils,       only: endrun
 
-
-#ifdef OSLO_AERO
 use commondefinitions, only:  nmodes_oslo => nmodes
 use aerosoldef, only: MODE_IDX_DST_A2, MODE_IDX_DST_A3, MODE_IDX_SO4_AC &
                       ,MODE_IDX_OMBC_INTMIX_COAT_AIT, lifeCycleNumberMedianRadius, &
@@ -61,7 +49,6 @@ use oslo_utils, only: CalculateNumberConcentration
 use parmix_progncdnc
 use hetfrz_classnuc_oslo
 use nucleate_ice_oslo
-#endif
 
 implicit none
 private
@@ -131,13 +118,13 @@ contains
 !=========================================================================================
 
 subroutine microp_aero_register
-   !----------------------------------------------------------------------- 
-   ! 
-   ! Purpose: 
+   !-----------------------------------------------------------------------
+   !
+   ! Purpose:
    ! Register pbuf fields for aerosols needed by microphysics
-   ! 
+   !
    ! Author: Cheryl Craig October 2012
-   ! 
+   !
    !-----------------------------------------------------------------------
    use ppgrid,         only: pcols
    use physics_buffer, only: pbuf_add_field, dtype_r8
@@ -146,7 +133,7 @@ subroutine microp_aero_register
 
    call pbuf_add_field('RNDST',      'physpkg',dtype_r8,(/pcols,pver,4/), rndst_idx)
    call pbuf_add_field('NACON',      'physpkg',dtype_r8,(/pcols,pver,4/), nacon_idx)
- 
+
    call nucleate_ice_oslo_register()
    call hetfrz_classnuc_oslo_register()
 
@@ -156,13 +143,13 @@ end subroutine microp_aero_register
 
 subroutine microp_aero_init
 
-   !----------------------------------------------------------------------- 
-   ! 
-   ! Purpose: 
+   !-----------------------------------------------------------------------
+   !
+   ! Purpose:
    ! Initialize constants for aerosols needed by microphysics
-   ! 
+   !
    ! Author: Andrew Gettelman May 2010
-   ! 
+   !
    !-----------------------------------------------------------------------
 
    ! local variables
@@ -189,7 +176,7 @@ subroutine microp_aero_init
 
    select case(trim(eddy_scheme))
    case ('diag_TKE')
-      tke_idx      = pbuf_get_index('tke')   
+      tke_idx      = pbuf_get_index('tke')
    case ('CLUBB_SGS')
       wp2_idx = pbuf_get_index('WP2_nadv')
    case default
@@ -238,7 +225,7 @@ subroutine microp_aero_init
       ! check if coarse dust is in separate mode
       separate_dust = mode_coarse_dst_idx > 0
 
-      ! for 3-mode 
+      ! for 3-mode
       if ( mode_coarse_dst_idx<0 ) mode_coarse_dst_idx = mode_coarse_idx
       if ( mode_coarse_slt_idx<0 ) mode_coarse_slt_idx = mode_coarse_idx
 
@@ -311,7 +298,7 @@ subroutine microp_aero_init
 
    end if
 
-#endif 
+#endif
 
    call addfld('LCLOUD', (/ 'lev' /), 'A', ' ',   'Liquid cloud fraction used in stratus activation')
 
@@ -330,16 +317,17 @@ end subroutine microp_aero_init
 !=========================================================================================
 
 subroutine microp_aero_readnl(nlfile)
-
-   use namelist_utils,  only: find_group_name
-   use units,           only: getunit, freeunit
-   use mpishorthand
+   use spmd_utils,           only: mpi_real8, masterprocid, mpicom
+   use namelist_utils,       only: find_group_name
+   use nucleate_ice_oslo,    only: nucleate_ice_oslo_readnl
+   use hetfrz_classnuc_oslo, only: hetfrz_classnuc_oslo_readnl
+   use ndrop,                only: ndrop_readnl
 
    character(len=*), intent(in) :: nlfile  ! filepath for file containing namelist input
 
    ! Namelist variables
    real(r8) :: microp_aero_bulk_scale = 2._r8  ! prescribed aerosol bulk sulfur scale factor
- 
+
    ! Local variables
    integer :: unitn, ierr
    character(len=*), parameter :: subname = 'microp_aero_readnl'
@@ -348,8 +336,7 @@ subroutine microp_aero_readnl(nlfile)
    !-----------------------------------------------------------------------------
 
    if (masterproc) then
-      unitn = getunit()
-      open( unitn, file=trim(nlfile), status='old' )
+      open(newunit=unitn, file=trim(nlfile), status='old' )
       call find_group_name(unitn, 'microp_aero_nl', status=ierr)
       if (ierr == 0) then
          read(unitn, microp_aero_nl, iostat=ierr)
@@ -358,12 +345,11 @@ subroutine microp_aero_readnl(nlfile)
          end if
       end if
       close(unitn)
-      call freeunit(unitn)
    end if
 
 #ifdef SPMD
    ! Broadcast namelist variable
-   call mpibcast(microp_aero_bulk_scale, 1, mpir8, 0, mpicom)
+   call mpi_bcast(microp_aero_bulk_scale, 1, mpi_real8, masterprocid, mpicom)
 #endif
 
    ! set local variables
@@ -371,6 +357,7 @@ subroutine microp_aero_readnl(nlfile)
 
    call nucleate_ice_oslo_readnl(nlfile)
    call hetfrz_classnuc_oslo_readnl(nlfile)
+   call ndrop_readnl(nlfile)
 
 end subroutine microp_aero_readnl
 
@@ -395,7 +382,7 @@ subroutine microp_aero_run ( &
    type(physics_state) :: state1                ! Local copy of state variable
    type(physics_ptend) :: ptend_loc
 
-   real(r8), pointer :: ast(:,:)        
+   real(r8), pointer :: ast(:,:)
 
    real(r8), pointer :: npccn(:,:)      ! number of CCN (liquid activated)
 
@@ -440,18 +427,18 @@ subroutine microp_aero_run ( &
    real(r8) :: nucboas
 
    real(r8) :: wght
-   
+
    integer :: lchnk, ncol
 
    !++ MH_2015/04/10
    real(r8) :: factnum(pcols,pver,0:nmodes_oslo) ! activation fraction for aerosol number
    type qqcw_type
-   real(r8), pointer :: fldcw(:,:) 
+   real(r8), pointer :: fldcw(:,:)
    end type qqcw_type
    type(qqcw_type) :: qqcw(pcnst)
    real(r8) :: qaercwpt(pcols,pver,pcnst)
    integer :: kk
-   
+
    !++ MH_2015/04/10
 #ifdef OSLO_AERO
       logical  :: hasAerosol(pcols, pver, nmodes_oslo)
@@ -475,7 +462,7 @@ subroutine microp_aero_run ( &
       real(r8) :: volumeCoat(pcols,pver,nmodes_oslo)
       real(r8) :: sigmag_amode(3)
       real(r8) :: CloudnumberConcentration(pcols,pver,0:nmodes_oslo)
-      
+
       real(r8) :: fn_bc(pcols,pver), fn_dst1(pcols,pver), fn_dst3(pcols,pver)
       real(r8) :: hetraer_bc(pcols,pver), hetraer_dst1(pcols,pver), hetraer_dst3(pcols,pver)
       real(r8) :: dstcoat_bc(pcols,pver), dstcoat_dst1(pcols,pver), dstcoat_dst3(pcols,pver)
@@ -502,7 +489,7 @@ subroutine microp_aero_run ( &
    if (clim_modal_aero) then
 
       itim_old = pbuf_old_tim_idx()
-      
+
       call pbuf_get_field(pbuf, ast_idx,  cldn, start=(/1,1,itim_old/), kount=(/pcols,pver,1/) )
       call pbuf_get_field(pbuf, cldo_idx, cldo, start=(/1,1,itim_old/), kount=(/pcols,pver,1/) )
 
@@ -516,7 +503,7 @@ subroutine microp_aero_run ( &
    end if
 
    ! initialize output
-   npccn(1:ncol,1:pver)    = 0._r8  
+   npccn(1:ncol,1:pver)    = 0._r8
 
    nacon(1:ncol,1:pver,:)  = 0._r8
 
@@ -554,7 +541,7 @@ subroutine microp_aero_run ( &
     !na500(1:ncol,1:pver) = 0._r8
     !tot_na500(1:ncol,1:pver) = 0._r8
     !-- wy4.0
-    
+
 #ifdef OSLO_AERO
     cam(:,:,:) = 0._r8
    !qaercwpt(1:ncol,1:pver,:) = 0.0_r8
@@ -568,7 +555,7 @@ subroutine microp_aero_run ( &
 #endif
 !-- MH_2015/04/10
 
-   
+
 #ifndef OSLO_AERO
    if (clim_modal_aero) then
       ! mode number mixing ratios
@@ -590,7 +577,7 @@ subroutine microp_aero_run ( &
       do m = 1, naer_all
          call rad_cnst_get_aer_mmr(0, m, state1, pbuf, aer_mmr)
          maerosol(:ncol,:,m) = aer_mmr(:ncol,:)*rho(:ncol,:)
-         
+
          if (m .eq. idxsul) then
             naer2(:ncol,:,m) = maerosol(:ncol,:,m)*num_to_mass_aer(m)*bulk_scale
          else
@@ -600,7 +587,7 @@ subroutine microp_aero_run ( &
    end if
 #endif
    !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-   ! More refined computation of sub-grid vertical velocity 
+   ! More refined computation of sub-grid vertical velocity
    ! Set to be zero at the surface by initialization.
 
    select case (trim(eddy_scheme))
@@ -627,7 +614,7 @@ subroutine microp_aero_run ( &
          case ('diag_TKE', 'CLUBB_SGS')
             wsub(i,k) = sqrt(0.5_r8*(tke(i,k) + tke(i,k+1))*(2._r8/3._r8))
             wsub(i,k) = min(wsub(i,k),10._r8)
-         case default 
+         case default
             ! get sub-grid vertical velocity from diff coef.
             ! following morrison et al. 2005, JAS
             ! assume mixing length of 30 m
@@ -657,16 +644,16 @@ subroutine microp_aero_run ( &
 #ifdef OSLO_AERO
 
 !Get size distributed interstitial aerosol
-        call parmix_progncdnc_sub(        &   
+        call parmix_progncdnc_sub(        &
                     ncol                  &        !I [nbr] number of columns used
                     ,state%q              &        !I [kg/kg] mass mixing ratio of tracers
                     ,rho                  &        !I [kg/m3] air density
                     ,CProcessModes        &        !O [kg/m3] added mass (total distributed all background modes)
-                    ,f_c                  &        !O 
-                    ,f_bc                 &        !O 
-                    ,f_aq                 &        !O 
-                    ,f_so4_cond           &        !O 
-                    ,f_soa                &    
+                    ,f_c                  &        !O
+                    ,f_bc                 &        !O
+                    ,f_aq                 &        !O
+                    ,f_so4_cond           &        !O
+                    ,f_soa                &
                     ,cam                  &        !O
                     ,f_acm             &        !O [frc] carbon fraction in mode
                     ,f_bcm             &        !O [frc] fraction of c being bc
@@ -676,7 +663,7 @@ subroutine microp_aero_run ( &
                     ,numberConcentration &      !O [#/m3] number concentration
                     ,volumeConcentration &      !O [m3/m3] volume concentration
                     ,hygroscopicity    &        !O [mol/mol]
-                    ,lnsigma           &        !O [-] log sigma 
+                    ,lnsigma           &        !O [-] log sigma
                     ,hasAerosol        &        !I [t/f] do we have this type of aerosol here?
                     ,volumeCore        &
                     ,volumeCoat        &
@@ -811,10 +798,10 @@ subroutine microp_aero_run ( &
 
             if (clim_modal_aero) then
 #if OSLO_AERO
-               !fxm: I think model uses bins, not modes.. But to get it 
+               !fxm: I think model uses bins, not modes.. But to get it
                !approximately correct, use mode radius in first version
                nacon(i,k,2) = numberConcentration(i,k,MODE_IDX_DST_A2)
-               nacon(i,k,3) = numberConcentration(i,k,MODE_IDX_DST_A3) 
+               nacon(i,k,3) = numberConcentration(i,k,MODE_IDX_DST_A3)
                rndst(i,k,2) = lifeCycleNumberMedianRadius(MODE_IDX_DST_A2)
                rndst(i,k,3) = lifeCycleNumberMedianRadius(MODE_IDX_DST_A3)
                nacon(i,k,1) = 0.0_r8 !Set to zero to make sure
@@ -824,12 +811,12 @@ subroutine microp_aero_run ( &
                ! For modal aerosols:
                !  use size '3' for dust coarse mode...
                !  scale by dust fraction in coarse mode
-               
+
                dmc  = coarse_dust(i,k)
                ssmc = coarse_nacl(i,k)
 
                if ( separate_dust ) then
-                  ! 7-mode -- has separate dust and seasalt mode types and no need for weighting 
+                  ! 7-mode -- has separate dust and seasalt mode types and no need for weighting
                   wght = 1._r8
                else
                   so4mc = coarse_so4(i,k)
@@ -846,7 +833,7 @@ subroutine microp_aero_run ( &
                !also redefine parameters based on size...
 
                rndst(i,k,3) = 0.5_r8*dgnumwet(i,k,mode_coarse_dst_idx)
-               if (rndst(i,k,3) <= 0._r8) then 
+               if (rndst(i,k,3) <= 0._r8) then
                   rndst(i,k,3) = rn_dst3
                end if
 
@@ -855,13 +842,13 @@ subroutine microp_aero_run ( &
 
                !For Bulk Aerosols: set equal to aerosol number for dust for bins 2-4 (bin 1=0)
 
-               if (idxdst2 > 0) then 
+               if (idxdst2 > 0) then
                   nacon(i,k,2) = naer2(i,k,idxdst2)
                end if
-               if (idxdst3 > 0) then 
+               if (idxdst3 > 0) then
                   nacon(i,k,3) = naer2(i,k,idxdst3)
                end if
-               if (idxdst4 > 0) then 
+               if (idxdst4 > 0) then
                   nacon(i,k,4) = naer2(i,k,idxdst4)
                end if
             end if
