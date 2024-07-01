@@ -45,7 +45,11 @@ implicit none
 private
 save
 
-public ndrop_init, dropmixnuc, activate_modal, loadaer
+public :: ndrop_init
+public :: ndrop_readnl
+public :: dropmixnuc
+public :: activate_modal
+public :: loadaer
 
 #ifndef OSLO_AERO
 real(r8), allocatable :: alogsig(:)     ! natl log of geometric standard dev of aerosol
@@ -99,14 +103,12 @@ integer :: ncnst_tot                  ! total number of mode number conc + mode 
 ! Indices for MAM species in the ptend%q array.  Needed for prognostic aerosol case.
 integer, allocatable :: mam_cnst_idx(:,:)
 
-#ifdef OSLO_AERO
 logical :: tendencyCounted(pcnst) = .false. ! set flags true for constituents with non-zero tendencies
 integer :: n_aerosol_tracers
 integer :: aerosolTracerList(pcnst)        !List where indexes 1...n_aerosol_tracers are the indexes in pcnst
                                            !..something like (/ l_so4_a1, l_bc_a, .../)etc
 integer :: inverseAerosolTracerList(pcnst) !List where you can back the place in aerosolTracerList if you know the 
                                            !tracer index. So in the example above inverseAerosolTracerList(l_so4_a1) = 1
-#endif
 
 ! ptr2d_t is used to create arrays of pointers to 2D fields
 type ptr2d_t
@@ -122,6 +124,50 @@ logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero t
 contains
 !===============================================================================
 
+subroutine ndrop_readnl(nlfile)
+
+   use spmd_utils,     only: mpi_character, masterprocid, mpicom
+   use namelist_utils, only: find_group_name
+
+   character(len=*), intent(in) :: nlfile  ! filepath for file containing namelist input
+
+   ! Local variables
+   integer :: unitn, ierr
+   character(len=*), parameter :: subname = 'microp_aero_readnl'
+
+   namelist /ndrop_nl/ aerosol_activation_scheme,                          &
+        aerosol_diagnostic_activation
+   !-----------------------------------------------------------------------------
+
+   if (masterproc) then
+      open(newunit=unitn, file=trim(nlfile), status='old' )
+      call find_group_name(unitn, 'microp_aero_nl', status=ierr)
+      if (ierr == 0) then
+         read(unitn, microp_aero_nl, iostat=ierr)
+         if (ierr /= 0) then
+            call endrun(subname // ':: ERROR reading namelist')
+         end if
+      end if
+      close(unitn)
+   end if
+
+#ifdef SPMD
+   ! Broadcast namelist variable
+   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme),  &
+        mpi_character, masterprocid, mpicom, ierr)
+   if (ierr /= 0) then
+      call endrun(sub//": FATAL: mpi_bcast: aerosol_activation_scheme")
+   end if
+   call mpi_bcast(aerosol_diagnostic_activation,                              &
+        len(aerosol_diagnostic_activation), mpi_character,                    &
+        masterprocid, mpicom, ierr)
+   if (ierr /= 0) then
+      call endrun(sub//": FATAL: mpi_bcast: aerosol_diagnostic_activation")
+   end if
+#endif
+
+end subroutine ndrop_readnl
+
 subroutine ndrop_init
 
    integer  :: ii, l, lptr, m, mm
@@ -131,10 +177,8 @@ subroutine ndrop_init
    character(len=128)  :: long_name
    character(len=8)    :: unit
    logical :: history_amwg         ! output the variables used by the AMWG diag package
-#ifdef OSLO_AERO
    character(len=10)                :: modeString
-   character(len=20)                :: varname
-#endif 
+   character(len=20)                :: varname 
 
    !-------------------------------------------------------------------------------
 
@@ -159,51 +203,20 @@ subroutine ndrop_init
 
    ! get info about the modal aerosols
    ! get ntot_amode
-#ifdef OSLO_AERO
    ntot_amode = nmodes !from opttab
-#else
-   call rad_cnst_get_info(0, nmodes=ntot_amode)
-#endif
    allocate( &
       nspec_amode(ntot_amode),  &
       sigmag_amode(ntot_amode), &
       dgnumlo_amode(ntot_amode), &
       dgnumhi_amode(ntot_amode), &
-#ifndef OSLO_AERO
-      alogsig(ntot_amode),      &
-      exp45logsig(ntot_amode),  &
-      f1(ntot_amode),           &
-      f2(ntot_amode),           &
-#endif
       voltonumblo_amode(ntot_amode), &
       voltonumbhi_amode(ntot_amode)  )
 
-#ifdef OSLO_AERO
+
    do m = 1,ntot_amode
       nspec_amode(m) = getNumberOfTracersInMode(m)
-   enddo
-#else 
-   do m = 1, ntot_amode
-      ! use only if width of size distribution is prescribed
-
-      ! get mode info
-      call rad_cnst_get_info(0, m, nspec=nspec_amode(m))
-
-      ! get mode properties
-      call rad_cnst_get_mode_props(0, m, sigmag=sigmag_amode(m),  &
-         dgnumhi=dgnumhi_amode(m), dgnumlo=dgnumlo_amode(m))
-
-      alogsig(m)     = log(sigmag_amode(m))
-      exp45logsig(m) = exp(4.5_r8*alogsig(m)*alogsig(m))
-      f1(m)          = 0.5_r8*exp(2.5_r8*alogsig(m)*alogsig(m))
-      f2(m)          = 1._r8 + 0.25_r8*alogsig(m)
-
-      voltonumblo_amode(m) = 1._r8 / ( (pi/6._r8)*                          &
-                             (dgnumlo_amode(m)**3._r8)*exp(4.5_r8*alogsig(m)**2._r8) )
-      voltonumbhi_amode(m) = 1._r8 / ( (pi/6._r8)*                          &
-                             (dgnumhi_amode(m)**3._r8)*exp(4.5_r8*alogsig(m)**2._r8) )
    end do
-#endif 
+
    ! Init the table for local indexing of mam number conc and mmr.
    ! This table uses species index 0 for the number conc.
 
