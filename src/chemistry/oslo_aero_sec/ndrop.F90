@@ -51,12 +51,6 @@ public :: dropmixnuc
 public :: activate_modal
 public :: loadaer
 
-#ifndef OSLO_AERO
-real(r8), allocatable :: alogsig(:)     ! natl log of geometric standard dev of aerosol
-real(r8), allocatable :: exp45logsig(:)
-real(r8), allocatable, target :: f1(:)          ! abdul-razzak functions of width
-real(r8), allocatable, target :: f2(:)          ! abdul-razzak functions of width
-#endif
 
 real(r8) :: t0            ! reference temperature
 real(r8) :: aten
