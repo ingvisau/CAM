@@ -32,13 +32,13 @@ use cam_logfile,      only: iulog
 use phys_control,   only: use_hetfrz_classnuc
 !-- MH_2015/09/09
 
-#ifdef OSLO_AERO
+
 !++oslo
 use aerosoldef 
 use parmix_progncdnc
 use oslo_utils, only: calculateNumberMedianRadius
 !--oslo
-#endif
+
 
 
 implicit none
@@ -1526,7 +1526,7 @@ subroutine dropmixnuc( &
             overlapm, qncld, zero, zero, pver, &
             dtmix, .false.)
 
-#ifdef OSLO_AERO
+
          !Mix number concentrations consistently!!
          do m = 1, ntot_amode
             mm = mam_idx(m,0)
@@ -1550,63 +1550,9 @@ subroutine dropmixnuc( &
                overlapm, raercol(:,mm,nsav), zero, flxconv, pver, &
                dtmix, .true., raercol_cw(:,mm,nsav))
          end do
-#endif
 
-#ifndef OSLO_AERO
-         ! rce-comment
-         !    the interstitial particle mixratio is different in clear/cloudy portions
-         !    of a layer, and generally higher in the clear portion.  (we have/had
-         !    a method for diagnosing the the clear/cloudy mixratios.)  the activation
-         !    source terms involve clear air (from below) moving into cloudy air (above).
-         !    in theory, the clear-portion mixratio should be used when calculating 
-         !    source terms
-         do m = 1, ntot_amode
-            mm = mam_idx(m,0)
-            ! rce-comment -   activation source in layer k involves particles from k+1
-            !	              source(:)= nact(:,m)*(raercol(:,mm,nsav))
-            source(top_lev:pver-1) = nact(top_lev:pver-1,m)*(raercol(top_lev+1:pver,mm,nsav))
-            ! rce-comment - new formulation for k=pver
-            !               source(  pver  )= nact(  pver,  m)*(raercol(  pver,mm,nsav))
-            tmpa = raercol(pver,mm,nsav)*nact(pver,m) &
-                 + raercol_cw(pver,mm,nsav)*(nact(pver,m) - taumix_internal_pver_inv)
-            source(pver) = max(0.0_r8, tmpa)
-            flxconv = 0._r8
 
-            call explmix( &
-               raercol_cw(:,mm,nnew), source, ekkp, ekkm, overlapp, &
-               overlapm, raercol_cw(:,mm,nsav), zero, zero, pver,   &
-               dtmix, .false.)
 
-            call explmix( &
-               raercol(:,mm,nnew), source, ekkp, ekkm, overlapp,  &
-               overlapm, raercol(:,mm,nsav), zero, flxconv, pver, &
-               dtmix, .true., raercol_cw(:,mm,nsav))
-
-            do l = 1, nspec_amode(m)
-               mm = mam_idx(m,l)
-               ! rce-comment -   activation source in layer k involves particles from k+1
-               !	          source(:)= mact(:,m)*(raercol(:,mm,nsav))
-               source(top_lev:pver-1) = mact(top_lev:pver-1,m)*(raercol(top_lev+1:pver,mm,nsav))
-               ! rce-comment- new formulation for k=pver
-               !                 source(  pver  )= mact(  pver  ,m)*(raercol(  pver,mm,nsav))
-               tmpa = raercol(pver,mm,nsav)*mact(pver,m) &
-                    + raercol_cw(pver,mm,nsav)*(mact(pver,m) - taumix_internal_pver_inv)
-               source(pver) = max(0.0_r8, tmpa)
-               flxconv = 0._r8
-
-               call explmix( &
-                  raercol_cw(:,mm,nnew), source, ekkp, ekkm, overlapp, &
-                  overlapm, raercol_cw(:,mm,nsav), zero, zero, pver,   &
-                  dtmix, .false.)
-
-               call explmix( &
-                  raercol(:,mm,nnew), source, ekkp, ekkm, overlapp,  &
-                  overlapm, raercol(:,mm,nsav), zero, flxconv, pver, &
-                  dtmix, .true., raercol_cw(:,mm,nsav))
-
-            end do
-         end do
-#endif
          if (called_from_spcam) then
          !
          ! turbulent mixing for gas species .
@@ -1622,7 +1568,7 @@ subroutine dropmixnuc( &
                end do
          endif
 
-#ifdef OSLO_AERO
+
          do lptr2=1,n_aerosol_tracers
             source(top_lev:pver-1) = mact_tracer(top_lev:pver-1,lptr2) &
                            *(raercol_tracer(top_lev+1:pver,lptr2,nsav))
@@ -1681,7 +1627,7 @@ subroutine dropmixnuc( &
             end if
         end do
      end do
-#endif
+
       ! evaporate particles again if no cloud
 
       do k = top_lev, pver
@@ -1726,7 +1672,7 @@ subroutine dropmixnuc( &
 
       if (prog_modal_aero) then
 
-#ifdef OSLO_AERO
+
 
 #ifdef MASS_BALANCE_CHECK
       !test for correct transfer between in-cloud / no-cloud..
@@ -1805,31 +1751,11 @@ subroutine dropmixnuc( &
          call endrun ("wrong mass budget in column")
       endif
 #endif
-#endif
+
          raertend = 0._r8
          qqcwtend = 0._r8
 
 
-#ifndef OSLO_AERO
-         do m = 1, ntot_amode
-            do l = 0, nspec_amode(m)
-
-               mm   = mam_idx(m,l)
-               lptr = mam_cnst_idx(m,l)
-
-               raertend(top_lev:pver) = (raercol(top_lev:pver,mm,nnew) - raer(mm)%fld(i,top_lev:pver))*dtinv
-               qqcwtend(top_lev:pver) = (raercol_cw(top_lev:pver,mm,nnew) - qqcw(mm)%fld(i,top_lev:pver))*dtinv
-
-               coltend(i,mm)    = sum( pdel(i,:)*raertend )/gravit
-               coltend_cw(i,mm) = sum( pdel(i,:)*qqcwtend )/gravit
-
-               ptend%q(i,:,lptr) = 0.0_r8
-               ptend%q(i,top_lev:pver,lptr) = raertend(top_lev:pver)           ! set tendencies for interstitial aerosol
-               qqcw(mm)%fld(i,:) = 0.0_r8
-               qqcw(mm)%fld(i,top_lev:pver) = raercol_cw(top_lev:pver,mm,nnew) ! update cloud-borne aerosol
-            end do
-         end do
-#else
       !OSLO AEROSOLS ...
 
       coltend_cw(i,:)=0.0_r8
@@ -1895,7 +1821,7 @@ subroutine dropmixnuc( &
             endif
          end do !species
       end do    !modes
-#endif
+
 
 #ifdef MASS_BALANCE_CHECK
       !Check mass balances (all removed should be in tendencies)
@@ -1984,10 +1910,6 @@ subroutine dropmixnuc( &
    call outfld('NDROPMIX', ndropmix, pcols, lchnk)
    call outfld('WTKE    ', wtke,     pcols, lchnk)
 
-#ifndef OSLO_AERO
-   !fxm: Make this work with the oslo aerosols also!
-   call ccncalc(state, pbuf, cs, ccn)
-#else
    if (history_aerosol) then
    call ccncalc_oslo(state &
                     , pbuf &
@@ -2001,24 +1923,13 @@ subroutine dropmixnuc( &
                     , lnSigma        &
                     , ccn           )
   end if
-#endif
+
    if(history_aerosol) then
    do l = 1, psat
       call outfld(ccn_name(l), ccn(1,1,l), pcols, lchnk)
    enddo
    end if
-#ifndef OSLO_AERO
-   ! do column tendencies
-   if (prog_modal_aero) then
-      do m = 1, ntot_amode
-         do l = 0, nspec_amode(m)
-            mm = mam_idx(m,l)
-            call outfld(fieldname(mm),    coltend(:,mm),    pcols, lchnk)
-            call outfld(fieldname_cw(mm), coltend_cw(:,mm), pcols, lchnk)
-         end do
-      end do
-   end if
-#endif
+
 
    if(called_from_spcam) then
    !
@@ -2036,7 +1947,7 @@ subroutine dropmixnuc( &
         deallocate(rgascol, coltendgas)
    end if
 
-#ifdef OSLO_AERO
+
    tendencyCounted(:)=.FALSE.
    do m = 1, ntot_amode
       do l = 1, nspec_amode(m)
@@ -2049,7 +1960,7 @@ subroutine dropmixnuc( &
          endif
       end do
    end do
-#endif
+
 
    deallocate( &
       nact,       &
@@ -2062,16 +1973,15 @@ subroutine dropmixnuc( &
       coltend_cw, &
       naermod,    &
       hygro,      &
-#ifdef OSLO_AERO
       lnsigman,   &  !Variable std. dev (CAM-Oslo)
-#endif
+
       vaerosol,   &
       fn,         &
       fm,         &
       fluxn,      &
       fluxm       )
 
-#ifdef OSLO_AERO
+
     deallocate (fluxm_tmp)
     deallocate (fluxn_tmp)
     deallocate (fm_tmp)
@@ -2080,7 +1990,7 @@ subroutine dropmixnuc( &
     deallocate(raercol_cw_tracer)
     deallocate(mact_tracer)
     deallocate(mfullact_tracer)
-#endif
+
 
 
 end subroutine dropmixnuc
@@ -2348,7 +2258,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
       if(volume(m).gt.1.e-39_r8.and.na(m).gt.1.e-39_r8)then
          !            number mode radius (m)
          !           write(iulog,*)'alogsig,volc,na=',alogsig(m),volc(m),na(m)
-#ifdef OSLO_AERO
+
          if(present(lnsigman))then
             exp45logsig_var(m) = exp(4.5_r8*lnsigman(m)*lnsigman(m))
             amcube(m)=(3._r8*volume(m)/(4._r8*pi*exp45logsig_var(m)*na(m)))  ! only if variable size dist
@@ -2357,10 +2267,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
          else
             call endrun("Problem with variable std. dev")
          endif
-#else 
-   !Std cam
-         amcube(m)=(3._r8*volume(m)/(4._r8*pi*exp45logsig(m)*na(m)))  ! only if variable size dist
-#endif
+
          !           growth coefficent Abdul-Razzak & Ghan 1998 eqn 16
          !           should depend on mean radius of mode to account for gas kinetic effects
          !           see Fountoukis and Nenes, JGR2005 and Meskhidze et al., JGR2006
@@ -2409,7 +2316,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
       dwmin = min( dwmax, 0.01_r8 )
       do n = 1, nx
 
-100      wnuc=w+wdiab
+100      wnuc=w+wdiab ! WHAT? Ingvild 2/7/24
          !           write(iulog,*)'wnuc=',wnuc
          alw=alpha*wnuc
          sqrtalw=sqrt(alw)
@@ -2421,19 +2328,17 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
          enddo
 
          call maxsat(zeta,eta,nmode,smc,smax &
-#ifdef OSLO_AERO
+
                      ,f1_var, f2_var         &
-#endif
+
                      )
          !	      write(iulog,*)'w,smax=',w,smax
 
          lnsmax=log(smax)
 
-#ifdef OSLO_AERO
+
          x=twothird*(lnsm(nmode)-lnsmax)/(sq2*lnsigman(nmode))
-#else
-         x=twothird*(lnsm(nmode)-lnsmax)/(sq2*alogsig(nmode))
-#endif
+
          fnew=0.5_r8*(1._r8-erf(x))
 
 
@@ -2463,21 +2368,17 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
          do m=1,nmode
             !              modal
-#ifdef OSLO_AERO
+
             x=twothird*(lnsm(m)-lnsmax)/(sq2*lnsigman(m))
-#else
-            x=twothird*(lnsm(m)-lnsmax)/(sq2*alogsig(m))
-#endif
+
             fn(m)=0.5_r8*(1._r8-erf(x))
             fnmin=min(fn(m),fnmin)
             !               integration is second order accurate
             !               assumes linear variation of f*g with w
             fnbar=(fn(m)*g+fnold(m)*gold)
-#ifdef OSLO_AERO
+
             arg=x-1.5_r8*sq2*lnsigman(m)
-#else
-            arg=x-1.5_r8*sq2*alogsig(m)
-#endif
+
             fm(m)=0.5_r8*(1._r8-erf(arg))
             fmbar=(fm(m)*g+fmold(m)*gold)
             wb=(w+wold)
@@ -2590,20 +2491,18 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
          do m=1,nmode
             eta(m)=etafactor1*etafactor2(m)
             zeta(m)=twothird*sqrtalw*aten/sqrtg
-#ifdef OSLO_AERO
+
             if(present(lnsigman))then
                f1_var(m)          = 0.5_r8*exp(2.5_r8*lnsigman(m)*lnsigman(m))
                f2_var(m)          = 1._r8 + 0.25_r8*lnsigman(m)
             else
                call endrun("Problem with variable std. dev single updraft")
              endif
-#endif
+
          enddo
 
-         call maxsat(zeta,eta,nmode,smc,smax &
-#ifdef OSLO_AERO
+         call maxsat(zeta,eta,nmode,smc,smax
                      ,f1_var, f2_var         &
-#endif
                      )
 
          lnsmax=log(smax)
@@ -2611,17 +2510,13 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
 
          do m=1,nmode
-#ifdef OSLO_AERO
+
             x=twothird*(lnsm(m)-lnsmax)/(sq2*lnsigman(m))
-#else
-            x=twothird*(lnsm(m)-lnsmax)/(sq2*alogsig(m))
-#endif
+
             fn(m)=0.5_r8*(1._r8-erf(x))
-#ifdef OSLO_AERO
+
             arg=x-1.5_r8*sq2*lnsigman(m)
-#else
-            arg=x-1.5_r8*sq2*alogsig(m)
-#endif
+
             fm(m)=0.5_r8*(1._r8-erf(arg))
             if(wbar.gt.0._r8)then
                fluxn(m)=fn(m)*w
@@ -2657,13 +2552,10 @@ subroutine maxsat(zeta,eta,nmode,smc,smax, f1_in, f2_in)
    real(r8) :: sum, g1, g2, g1sqrt, g2sqrt
    real(r8), pointer :: f1_used(:), f2_used(:)
 
-#ifdef OSLO_AERO
+
       f1_used => f1_in
       f2_used => f2_in
-#else
-      f1_used => f1
-      f2_used => f2
-#endif
+
 
 
    do m=1,nmode
