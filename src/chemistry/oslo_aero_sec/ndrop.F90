@@ -252,7 +252,6 @@ subroutine ndrop_init
                      history_aerosol_out = history_aerosol, &
                      prog_modal_aero_out=prog_modal_aero)
 
-#ifdef OSLO_AERO
    prog_modal_aero = .TRUE.
    n_aerosol_tracers = getNumberOfAerosolTracers()
    call fillAerosolTracerList(aerosolTracerList)
@@ -260,9 +259,9 @@ subroutine ndrop_init
    do ii=1,n_aerosol_tracers
       print*, "aerosolTracerList", ii, aerosolTracerList(ii), inverseAerosolTracerList(aerosolTracerList(ii))
    end do
-#endif
 
-#ifdef OSLO_AERO
+
+
    lq(:)=.FALSE.  !Initialize
 
    !Set up tendencies for tracers (output)
@@ -312,66 +311,7 @@ subroutine ndrop_init
       call addfld(varName, (/ 'lev' /),'A','-','Hygroscopicity '//modeString)
       if(history_aerosol)call add_default(varName, 1, ' ')
    end do
-#else
-   do m = 1, ntot_amode
-      do l = 0, nspec_amode(m)   ! loop over number + chem constituents
 
-         mm = mam_idx(m,l)
-
-         unit = 'kg/m2/s'
-         if (l == 0) then   ! number
-            unit = '#/m2/s'
-         end if
-
-         if (l == 0) then   ! number
-            call rad_cnst_get_info(0, m, num_name=tmpname, num_name_cw=tmpname_cw)
-         else
-            call rad_cnst_get_info(0, m, l, spec_name=tmpname, spec_name_cw=tmpname_cw)
-         end if
-
-         fieldname(mm)    = trim(tmpname) // '_mixnuc1'
-         fieldname_cw(mm) = trim(tmpname_cw) // '_mixnuc1'
-
-         if (prog_modal_aero) then
-
-            ! To set tendencies in the ptend object need to get the constituent indices
-            ! for the prognostic species
-            if (l == 0) then   ! number
-               call rad_cnst_get_mode_num_idx(m, lptr)
-            else
-               call rad_cnst_get_mam_mmr_idx(m, l, lptr)
-            end if
-            mam_cnst_idx(m,l) = lptr
-            lq(lptr)          = .true.
-
-            ! Add tendency fields to the history only when prognostic MAM is enabled.
-            long_name = trim(tmpname) // ' dropmixnuc mixnuc column tendency'
-            call addfld(fieldname(mm),    horiz_only, 'A', unit, long_name)
-
-            long_name = trim(tmpname_cw) // ' dropmixnuc mixnuc column tendency'
-            call addfld(fieldname_cw(mm), horiz_only, 'A', unit, long_name)
-
-            if (history_aerosol) then
-               call add_default(fieldname(mm), 1, ' ')
-               call add_default(fieldname_cw(mm), 1, ' ')
-            end if
-
-
-
-         end if
-            
-      end do
-   end do
-
-#endif
-
-!   call addfld('CCN1',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.02%')
-!   call addfld('CCN2',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.05%')
-!   call addfld('CCN3',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.1%')
-!   call addfld('CCN4',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.2%')
-!   call addfld('CCN5',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.5%')
-!   call addfld('CCN6',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=1.0%')
-!akc6+
    call addfld('CCN1',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.02%')
    call addfld('CCN2',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.05%')
    call addfld('CCN3',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.1%')
@@ -379,15 +319,12 @@ subroutine ndrop_init
    call addfld('CCN5',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.2%')
    call addfld('CCN6',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=0.5%')
    call addfld('CCN7',(/ 'lev' /), 'A','#/cm3','CCN concentration at S=1.0%')
-!akc6-
 
-#ifdef OSLO_AERO
    if(history_aerosol)then
       do l = 1, psat 
          call add_default(ccn_name(l), 1, ' ')
       enddo
    end if
-#endif
 
    call addfld('WTKE',     (/ 'lev' /), 'A', 'm/s', 'Standard deviation of updraft velocity')
    call addfld('NDROPMIX', (/ 'lev' /), 'A', '#/kg/s', 'Droplet number mixing')
@@ -395,29 +332,6 @@ subroutine ndrop_init
    call addfld('NDROPSNK', (/ 'lev' /), 'A', '#/kg/s', 'Droplet number loss by microphysics')
    call addfld('NDROPCOL', horiz_only,  'A', '#/m2', 'Column droplet number')
 
-#ifndef OSLO_AERO
-
-   ! set the add_default fields  
-   if (history_amwg) then
-      call add_default('CCN3', 1, ' ')
-   endif
-
-   if (history_aerosol .and. prog_modal_aero) then
-     do m = 1, ntot_amode
-        do l = 0, nspec_amode(m)   ! loop over number + chem constituents
-           mm = mam_idx(m,l)
-           if (l == 0) then   ! number
-              call rad_cnst_get_info(0, m, num_name=tmpname, num_name_cw=tmpname_cw)
-           else
-              call rad_cnst_get_info(0, m, l, spec_name=tmpname, spec_name_cw=tmpname_cw)
-           end if
-           fieldname(mm)    = trim(tmpname) // '_mixnuc1'
-           fieldname_cw(mm) = trim(tmpname_cw) // '_mixnuc1'
-        end do
-     end do
-   endif
-
-#endif
 
 end subroutine ndrop_init
 
@@ -566,13 +480,13 @@ subroutine dropmixnuc( &
 
    real(r8), allocatable :: raercol(:,:,:)    ! single column of aerosol mass, number mixing ratios
    real(r8), allocatable :: raercol_cw(:,:,:) ! same as raercol but for cloud-borne phase
-#ifdef OSLO_AERO
+
    !to avoid excessive calls to boundary layer scheme
    real(r8), allocatable :: raercol_tracer(:,:,:)
    real(r8), allocatable :: raercol_cw_tracer(:,:,:)
    real(r8), allocatable :: mact_tracer(:,:)
    real(r8), allocatable :: mfullact_tracer(:,:)
-#endif
+
 
    real(r8) :: na(pcols), va(pcols), hy(pcols)
    real(r8), allocatable :: naermod(:)  ! (1/m3)
@@ -608,7 +522,7 @@ subroutine dropmixnuc( &
 
    logical  :: called_from_spcam
    !-------------------------------------------------------------------------------
-#ifdef OSLO_AERO
+
    real(r8)       :: numberMedianRadius(pcols,pver,nmodes)
    real(r8)       :: sigma(pcols,pver,nmodes)                 ![-] sigma
    real(r8)       :: constituentFraction
@@ -640,7 +554,7 @@ subroutine dropmixnuc( &
    real(r8), allocatable            :: lnsigman(:)
    character(len=2)                 :: modeString
    character(len=20)                :: varname
-#endif
+
 
 ! IA 2024/06/07: BN VARIABLES
 ! -------------------------------------------
@@ -701,13 +615,11 @@ subroutine dropmixnuc( &
       coltend_cw(pcols,ncnst_tot),    &
       naermod(ntot_amode),            &
       hygro(ntot_amode),              &
-#ifdef OSLO_AERO
       lnsigman(ntot_amode),           &           !variable std. deviation (CAM-Oslo)
       raercol_tracer(pver,n_aerosol_tracers,2), &
       raercol_cw_tracer(pver,n_aerosol_tracers,2), &
       mact_tracer(pver,n_aerosol_tracers),      &
       mfullact_tracer(pver,n_aerosol_tracers),  &
-#endif
       vaerosol(ntot_amode),           &
       fn(ntot_amode),                 &
       fm(ntot_amode),                 &
@@ -715,8 +627,7 @@ subroutine dropmixnuc( &
       fluxm(ntot_amode)               )
 
    ! Init pointers to mode number and specie mass mixing ratios in 
-   ! intersitial and cloud borne phases.
-#ifdef OSLO_AERO  
+   ! intersitial and cloud borne phases.  
    !Need a list of all aerosol species ==> store in raer (mm) 
    ! or qqcw for cloud-borne aerosols (?)
    do m=1,nmodes  !All aerosol modes
@@ -728,13 +639,6 @@ subroutine dropmixnuc( &
          mm               =  mam_idx(m,l)                          !Index in raer/qqcw
          raer(mm)%fld =>  state%q(:,:,tracerIndex)                 !NOTE: These are total fields (for example condensate)
          call pbuf_get_field(pbuf, CloudTracerIndex, qqcw(mm)%fld) !NOTE: These are total fields (for example condensate)
-#ifdef EXTRATESTS
-!         if(tracerIndex .eq. ldebug)then
-!            do k=1,pver
-!               print*,"pointer check",k,m,l,mm,tracerIndex, raer(mm)%fld(idebug,k), state%q(idebug,k,tracerIndex)
-!            end do
-!         endf
-#endif
       enddo
    enddo
    allocate(                             &
@@ -742,18 +646,6 @@ subroutine dropmixnuc( &
       fm_tmp(ntot_amode),                 &
       fluxn_tmp(ntot_amode),              &
       fluxm_tmp(ntot_amode)               )
-#else
-   do m = 1, ntot_amode
-      mm = mam_idx(m, 0)
-      call rad_cnst_get_mode_num(0, m, 'a', state, pbuf, raer(mm)%fld)
-      call rad_cnst_get_mode_num(0, m, 'c', state, pbuf, qqcw(mm)%fld)  ! cloud-borne aerosol
-      do l = 1, nspec_amode(m)
-         mm = mam_idx(m, l)
-         call rad_cnst_get_aer_mmr(0, m, l, 'a', state, pbuf, raer(mm)%fld)
-         call rad_cnst_get_aer_mmr(0, m, l, 'c', state, pbuf, qqcw(mm)%fld)  ! cloud-borne aerosol
-      end do
-   end do
-#endif
 
    called_from_spcam = (present(from_spcam)) 
 
@@ -772,7 +664,6 @@ subroutine dropmixnuc( &
       call physics_ptend_init(ptend, state%psetcols, 'ndrop')
    end if
 
-#ifdef OSLO_AERO
       !Improve this later by using only cloud points ? 
       do k = top_lev, pver
          do i=1,ncol
@@ -828,15 +719,12 @@ subroutine dropmixnuc( &
          !stop
       endif
 
-#endif
-
    ! overall_main_i_loop
    do i = 1, ncol
 
-#ifdef OSLO_AERO
+
    coltend(i,:)=0.0_r8
    coltend_cw(i,:) = 0.0_r8
-#endif
 
       do k = top_lev, pver-1
          zs(k) = 1._r8/(zm(i,k) - zm(i,k+1))
@@ -887,7 +775,7 @@ subroutine dropmixnuc( &
 
       nsav = 1
       nnew = 2
-#ifdef OSLO_AERO
+
 
       !get constituent fraction
       componentFractionOK(:,:,:) = 0.0_r8
@@ -1150,7 +1038,7 @@ subroutine dropmixnuc( &
 
             ! load aerosol properties, assuming external mixtures
 
-#ifdef OSLO_AERO
+
    naermod(:) = 0.0_r8
    vaerosol(:) = 0.0_r8
    hygro(:) = 0.0_r8
@@ -1170,19 +1058,7 @@ subroutine dropmixnuc( &
    end do
    numberOfModes = m
    press=287._r8*cs(i,k)*temp(i,k) ! For BN
-#else
-         numberOfModes = ntot_amode
-            phase = 1 ! interstitial
-            do m = 1, ntot_amode
-               call loadaer( &
-                  state, pbuf, i, i, k, &
-                  m, cs, phase, na, va, &
-                  hy)
-               naermod(m)  = na(i)
-               vaerosol(m) = va(i)
-               hygro(m)    = hy(i)
-            end do
-#endif
+
          !++ MH_2015/04/10
          !Call the activation procedure
          if(numberOfModes .gt. 0)then
@@ -1207,7 +1083,7 @@ subroutine dropmixnuc( &
          endif
 
             dumc = (cldn_tmp - cldo_tmp)
-#ifdef OSLO_AERO
+
       if (use_hetfrz_classnuc) then
 	     fn_tmp(:) = fn_in(i,k,1:nmodes)
       else
@@ -1232,22 +1108,16 @@ subroutine dropmixnuc( &
          fluxn(kcomp) = fluxn_tmp(m)
          fluxm(kcomp) = fluxm_tmp(m)
       enddo
-#endif
+
             do m = 1, ntot_amode
                mm = mam_idx(m,0)
-#ifdef OSLO_AERO
+
                if (use_hetfrz_classnuc) then
                   dact   = dumc*fn_in(i,k,m)*numberConcentration(i,k,m)/cs(i,k) !#/kg_{air}
                else
                   dact   = dumc*fn(m)*numberConcentration(i,k,m)/cs(i,k) !#/kg_{air}
                end if
-#else
-               if (use_hetfrz_classnuc) then
-                  dact   = dumc*fn_in(i,k,m)*raer(mm)%fld(i,k) ! interstitial only
-               else
-                  dact   = dumc*fn(m)*raer(mm)%fld(i,k) ! interstitial only
-               end if
-#endif
+
                qcld(k) = qcld(k) + dact
                nsource(i,k) = nsource(i,k) + dact*dtinv
                raercol_cw(k,mm,nsav) = raercol_cw(k,mm,nsav) + dact  ! cloud-borne aerosol
@@ -1255,7 +1125,7 @@ subroutine dropmixnuc( &
                dum = dumc*fm(m)
                do l = 1, nspec_amode(m)
                   mm = mam_idx(m,l)
-#ifdef OSLO_AERO
+
                   if(m .gt. nbmodes)then
                      constituentFraction = 1.0_r8
                   else
@@ -1263,9 +1133,7 @@ subroutine dropmixnuc( &
                   endif
 
                   dact    = dum*raer(mm)%fld(i,k)*constituentFraction
-#else
-                  dact    = dum*raer(mm)%fld(i,k) ! interstitial only
-#endif
+
                   raercol_cw(k,mm,nsav) = raercol_cw(k,mm,nsav) + dact  ! cloud-borne aerosol
                   raercol(k,mm,nsav)    = raercol(k,mm,nsav) - dact
 #ifdef EXTRATESTS
@@ -1325,7 +1193,7 @@ subroutine dropmixnuc( &
                alogarg = max(1.e-20_r8, 1._r8/lcldn(i,k) - 1._r8)
                wmin    = wbar + wmix*0.25_r8*sq2pi*log(alogarg)
                phase   = 1   ! interstitial
-#ifdef OSLO_AERO
+
             naermod(:) = 0.0_r8
             vaerosol(:) = 0.0_r8
             hygro(:) = 0.0_r8
@@ -1343,21 +1211,7 @@ subroutine dropmixnuc( &
                end if
             end do
             numberOfModes = m
-#else
-            numberOfModes = ntot_amode
 
-               do m = 1, ntot_amode
-                  ! rce-comment - use kp1 here as old-cloud activation involves 
-                  !   aerosol from layer below
-                  call loadaer( &
-                     state, pbuf, i, i, kp1,  &
-                     m, cs, phase, na, va,   &
-                     hy)
-                  naermod(m)  = na(i)
-                  vaerosol(m) = va(i)
-                  hygro(m)    = hy(i)
-               end do
-#endif
          !++ MH_2015/04/10
          if(numberOfModes .gt. 0)then
 		    if (use_hetfrz_classnuc) then
@@ -1389,7 +1243,7 @@ subroutine dropmixnuc( &
                   dumc = lcldn(i,k)
                endif
 
-#ifdef OSLO_AERO
+
             if (use_hetfrz_classnuc) then
                fn_tmp(:) = fn_in(i,k,1:nmodes)
             else
@@ -1414,7 +1268,7 @@ subroutine dropmixnuc( &
                fluxn(kcomp) = fluxn_tmp(m)
                fluxm(kcomp) = fluxm_tmp(m)
             enddo
-#endif
+
 
                fluxntot = 0.0_r8
 
@@ -1603,7 +1457,7 @@ subroutine dropmixnuc( &
 !Don't need the mixing per mode in OSLO_AERO ==> only per tracer
 !Note that nsav/nnew is switched above, so operate on nnew here
 !nnew is the updated aerosol
-#ifdef OSLO_AERO
+
     raercol_tracer(:,:,:) = 0.0_r8
     raercol_cw_tracer(:,:,:) = 0.0_r8
     mact_tracer(:,:) = 0.0_r8
@@ -1639,7 +1493,7 @@ subroutine dropmixnuc( &
        mact_tracer(:,lptr2) = mact_tracer(:,lptr2)  &
                /(mfullact_tracer(:,lptr2) + smallNumber)
     end do
-#endif OSLO_AERO
+
 
       ! old_cloud_nsubmix_loop
       do n = 1, nsubmix
