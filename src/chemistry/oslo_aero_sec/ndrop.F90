@@ -114,6 +114,10 @@ logical :: prog_modal_aero     ! true when modal aerosols are prognostic
 logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero tendencies
                                ! in the ptend object
 
+! Aerosol activation
+char(len=4) :: aerosol_activation_scheme = 'invalid'
+char(len=4) :: aerosol_diagnostic_activation = 'invalid'
+
 !===============================================================================
 contains
 !===============================================================================
@@ -162,7 +166,7 @@ subroutine ndrop_readnl(nlfile)
 
 end subroutine ndrop_readnl
 
-subroutine ndrop_init
+subroutine ndrop_init()
 
    integer  :: ii, l, lptr, m, mm
    integer  :: nspec_max            ! max number of species in a mode
@@ -2495,9 +2499,7 @@ subroutine activate_modal(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
          enddo
 
-         call maxsat(zeta,eta,nmode,smc,smax
-                     ,f1_var, f2_var         &
-                     )
+         call maxsat(zeta,eta,nmode,smc,smax,f1_var, f2_var)
 
          lnsmax=log(smax)
          xmincoeff=alogaten-twothird*(lnsmax-alog2)-alog3
