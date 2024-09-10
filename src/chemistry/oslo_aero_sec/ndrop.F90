@@ -115,8 +115,8 @@ logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero t
                                ! in the ptend object
 
 ! Aerosol activation
-char(len=4) :: aerosol_activation_scheme = 'invalid'
-char(len=4) :: aerosol_diagnostic_activation = 'invalid'
+!char(len=4) :: aerosol_activation_scheme = 'invalid'
+!char(len=4) :: aerosol_diagnostic_activation = 'invalid'
 
 !===============================================================================
 contains
@@ -903,21 +903,7 @@ subroutine dropmixnuc( &
       endif  !idebug/ldebug
      enddo
 #endif
-     !END OSLO-STUFF, BELOW IS MAM 3
-#else
-   do m = 1, ntot_amode
-      mm = mam_idx(m,0)
-      raercol_cw(:,mm,nsav) = 0.0_r8
-      raercol(:,mm,nsav)    = 0.0_r8
-      raercol_cw(top_lev:pver,mm,nsav) = qqcw(mm)%fld(i,top_lev:pver)
-      raercol(top_lev:pver,mm,nsav)    = raer(mm)%fld(i,top_lev:pver)
-      do l = 1, nspec_amode(m)
-         mm = mam_idx(m,l)
-         raercol_cw(top_lev:pver,mm,nsav) = qqcw(mm)%fld(i,top_lev:pver)
-         raercol(top_lev:pver,mm,nsav)    = raer(mm)%fld(i,top_lev:pver)
-      end do
-   end do
-#endif
+
 
 
       if (called_from_spcam) then
