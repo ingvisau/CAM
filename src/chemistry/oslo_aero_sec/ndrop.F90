@@ -139,9 +139,9 @@ subroutine ndrop_readnl(nlfile)
 
    if (masterproc) then
       open(newunit=unitn, file=trim(nlfile), status='old' )
-      call find_group_name(unitn, 'microp_aero_nl', status=ierr)
+      call find_group_name(unitn, 'ndrop_nl', status=ierr)
       if (ierr == 0) then
-         read(unitn, microp_aero_readnl, iostat=ierr)
+         read(unitn, 'ndrop_nl', iostat=ierr)
          if (ierr /= 0) then
             call endrun(subname // ':: ERROR reading namelist')
          end if
