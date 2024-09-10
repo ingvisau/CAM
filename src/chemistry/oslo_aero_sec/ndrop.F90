@@ -115,8 +115,8 @@ logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero t
                                ! in the ptend object
 
 ! Aerosol activation
-char(len=4) :: aerosol_activation_scheme = 'none'
-char(len=4) :: aerosol_diagnostic_activation = 'none'
+character(len=4) :: aerosol_activation_scheme = 'none'
+character(len=4) :: aerosol_diagnostic_activation = 'none'
 
 !===============================================================================
 contains
