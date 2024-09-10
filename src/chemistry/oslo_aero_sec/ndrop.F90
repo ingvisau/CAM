@@ -154,7 +154,7 @@ subroutine ndrop_readnl(nlfile)
    call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme),  &
         mpi_character, masterprocid, mpicom, ierr)
    if (ierr /= 0) then
-      call endrun(sub//": FATAL: mpi_bcast: aerosol_activation_scheme")
+      call endrun(subname //": FATAL: mpi_bcast: aerosol_activation_scheme")
    end if
    call mpi_bcast(aerosol_diagnostic_activation,                              &
         len(aerosol_diagnostic_activation), mpi_character,                    &
