@@ -141,7 +141,7 @@ subroutine ndrop_readnl(nlfile)
       open(newunit=unitn, file=trim(nlfile), status='old' )
       call find_group_name(unitn, 'microp_aero_nl', status=ierr)
       if (ierr == 0) then
-         read(unitn, microp_aero_nl, iostat=ierr)
+         read(unitn, 'microp_aero_nl', iostat=ierr)
          if (ierr /= 0) then
             call endrun(subname // ':: ERROR reading namelist')
          end if
@@ -154,7 +154,7 @@ subroutine ndrop_readnl(nlfile)
    call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme),  &
         mpi_character, masterprocid, mpicom, ierr)
    if (ierr /= 0) then
-      call endrun(subname //": FATAL: mpi_bcast: aerosol_activation_scheme")
+      call endrun(subname // ': FATAL: mpi_bcast: aerosol_activation_scheme')
    end if
    call mpi_bcast(aerosol_diagnostic_activation,                              &
         len(aerosol_diagnostic_activation), mpi_character,                    &
