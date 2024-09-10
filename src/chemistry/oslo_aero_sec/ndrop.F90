@@ -131,7 +131,7 @@ subroutine ndrop_readnl(nlfile)
 
    ! Local variables
    integer :: unitn, ierr
-   character(len=*), parameter :: subname = 'microp_aero_readnl'
+   character(len=*), parameter :: subname = 'ndrop_readnl'
 
    namelist /ndrop_nl/ aerosol_activation_scheme,                          &
         aerosol_diagnostic_activation
@@ -141,7 +141,7 @@ subroutine ndrop_readnl(nlfile)
       open(newunit=unitn, file=trim(nlfile), status='old' )
       call find_group_name(unitn, 'ndrop_nl', status=ierr)
       if (ierr == 0) then
-         read(unitn, 'ndrop_nl', iostat=ierr)
+         read(unitn, ndrop_nl , iostat=ierr)
          if (ierr /= 0) then
             call endrun(subname // ':: ERROR reading namelist')
          end if
