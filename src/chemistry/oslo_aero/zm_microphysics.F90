@@ -13,7 +13,7 @@ use ppgrid,            only: pcols, pver, pverp
 use physconst,         only: gravit, rair, tmelt, cpair, rh2o, r_universal, mwh2o, rhoh2o
 use physconst,         only: latvap, latice
 !use activate_drop_mam, only: actdrop_mam_calc
-use ndrop,             only: activate_modal
+use ndrop,             only: activate_modal_ARG
 use ndrop_bam,         only: ndrop_bam_run
 use nucleate_ice,      only: nucleati
 use shr_spfn_mod,     only: erf => shr_spfn_erf 
