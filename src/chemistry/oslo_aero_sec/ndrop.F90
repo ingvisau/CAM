@@ -48,7 +48,8 @@ save
 public :: ndrop_init
 public :: ndrop_readnl
 public :: dropmixnuc
-public :: activate_modal
+public :: activate_modal_ARG
+public :: activate_modal_BN
 public :: loadaer
 
 
@@ -1047,18 +1048,18 @@ subroutine dropmixnuc( &
          !Call the activation procedure
          if(numberOfModes .gt. 0)then
 		    if (use_hetfrz_classnuc) then
-               call activate_modal( &
+               call activate_modal_ARG( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI, press,     &
+               vaerosol, hygro, lnsigman,      &
                fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
-            else
-               call activate_modal( &
+            else                                                          ! IA 11/9/24 Question: This else is for if use_hetfrz_classnuc. Why is the else without 1:nmodes when not use_hetfrz_classnuc?
+               call activate_modal_ARG( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI, press,    &
+               vaerosol, hygro, lnsigman,    &
                fn, fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
@@ -1199,18 +1200,18 @@ subroutine dropmixnuc( &
          !++ MH_2015/04/10
          if(numberOfModes .gt. 0)then
 		    if (use_hetfrz_classnuc) then
-               call activate_modal( &
+               call activate_modal_ARG( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman, DPGI, press,   &
+                  vaerosol, hygro, lnsigman,    &
                   fn_in(i,k,:), fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
                    )
             else
-               call activate_modal( &
+               call activate_modal_ARG( &
                   wbar, wmix, wdiab, wmin, wmax,                       &
                   temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman, DPGI, press,    &
+                  vaerosol, hygro, lnsigman,    &
                   fn, fm, fluxn,                      &
                   fluxm, flux_fullact(k)                       &
                    )
@@ -2058,8 +2059,8 @@ end subroutine explmix
 !===============================================================================
 
 subroutine activate_modal_ARG(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
-   na, nmode, volume, hygro, &
-   fn, fm, fluxn, fluxm, flux_fullact, lnsigman)
+   na, nmode, volume, hygro, lnsigman, &
+   fn, fm, fluxn, fluxm, flux_fullact)
 
    !      calculates number, surface, and mass fraction of aerosols activated as CCN
    !      calculates flux of cloud droplets, surface area, and aerosol mass into cloud
@@ -2151,7 +2152,7 @@ subroutine activate_modal_ARG(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8) z,z1,z2,wf1,wf2,zf1,zf2,gf1,gf2,gf
    real(r8) etafactor1,etafactor2(nmode),etafactor2max
    real(r8) grow
-   character(len=*), parameter :: subname='activate_modal'
+   character(len=*), parameter :: subname='activate_modal_ARG'
    integer m,n
 
 
@@ -2566,7 +2567,7 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8) z,z1,z2,wf1,wf2,zf1,zf2,gf1,gf2,gf
    real(r8) etafactor1,etafactor2(nmode),etafactor2max
    real(r8) grow
-   character(len=*), parameter :: subname='activate_modal'
+   character(len=*), parameter :: subname='activate_modal_BN'
    integer m,n
 
    ! IA 06/06/2024 -- BN variables
