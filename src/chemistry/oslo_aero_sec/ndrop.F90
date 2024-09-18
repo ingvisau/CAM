@@ -1044,7 +1044,11 @@ subroutine dropmixnuc( &
    numberOfModes = m
    press=287._r8*cs(i,k)*temp(i,k) ! For BN
 
-         !++ MH_2015/04/10
+         
+   
+   ! If aerosol_activation_scheme=ARG: 
+   
+   !++ MH_2015/04/10
          !Call the activation procedure
          if(numberOfModes .gt. 0)then
 		    if (use_hetfrz_classnuc) then
@@ -1066,6 +1070,7 @@ subroutine dropmixnuc( &
             end if
 	     !-- MH_2015/04/10
          endif
+   !endif aerosol_activation_scheme=ARG
 
             dumc = (cldn_tmp - cldo_tmp)
 
