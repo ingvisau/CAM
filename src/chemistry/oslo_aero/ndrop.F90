@@ -137,7 +137,7 @@ contains
 
       ! Local variables
       integer :: unitn, ierr
-      character(len=*), parameter :: subname = 'microp_aero_readnl'
+      character(len=*), parameter :: subname = 'ndrop_readnl'
 
       namelist /ndrop_nl/ aerosol_activation_scheme,                          &
            aerosol_diagnostic_activation
@@ -145,9 +145,9 @@ contains
 
       if (masterproc) then
          open(newunit=unitn, file=trim(nlfile), status='old' )
-         call find_group_name(unitn, 'microp_aero_nl', status=ierr)
+         call find_group_name(unitn, 'ndrop_nl', status=ierr)
          if (ierr == 0) then
-            read(unitn, microp_aero_nl, iostat=ierr)
+            read(unitn, ndrop_nl, iostat=ierr)
             if (ierr /= 0) then
                call endrun(subname // ':: ERROR reading namelist')
             end if
@@ -170,7 +170,7 @@ contains
       end if
 #endif
 
-   end subroutine microp_aero_readnl
+   end subroutine ndrop_readnl
 
    subroutine ndrop_init()
 
