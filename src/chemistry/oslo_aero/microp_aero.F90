@@ -349,7 +349,7 @@ subroutine microp_aero_readnl(nlfile)
 
 #ifdef SPMD
    ! Broadcast namelist variable
-   call mpi_bcast(microp_aero_bulk_scale, 1, mpi_real8, masterprocid, mpicom)
+   call mpi_bcast(microp_aero_bulk_scale, 1, mpi_real8, masterprocid, mpicom, ierr)
 #endif
 
    ! set local variables
