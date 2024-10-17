@@ -2314,7 +2314,8 @@ subroutine activate_modal_ARG(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
             x=twothird*(lnsm(m)-lnsmax)/(sq2*lnsigman(m))
 
-            fn(m)=0.5_r8*(1._r8-erf(x))
+            fn(m)=0.5_r8*(1._r8-erf(x)) ! Ingvild Aukan 17/10/2024: To my understanding, this has to do with the weighting 
+                                        ! to make the flux at higher vertical velocities less efficient
             fnmin=min(fn(m),fnmin)
             !               integration is second order accurate
             !               assumes linear variation of f*g with w
@@ -2325,7 +2326,8 @@ subroutine activate_modal_ARG(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
             fm(m)=0.5_r8*(1._r8-erf(arg))
             fmbar=(fm(m)*g+fmold(m)*gold)
             wb=(w+wold)
-            if(w.gt.0._r8)then
+            if(w.gt.0._r8)then ! Ingvild Aukan 17/10/2024: To my understanding, this has to do with the weighting 
+                                        ! to make the flux at higher vertical velocities less efficient
                sumflxn(m)=sumflxn(m)+sixth*(wb*fnbar           &
                   +(fn(m)*g*w+fnold(m)*gold*wold))*dw
                sumflxm(m)=sumflxm(m)+sixth*(wb*fmbar           &
@@ -2635,6 +2637,7 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    CALL PDFACTIV (wbar,na,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
    
    ! -------------------------------------------------------------
+   ! IA 24/09/2024: Try to add use_hetfrz_classnuc stuff (l.1208 in original ndrop_BN)
 
 
    if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
