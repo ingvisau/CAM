@@ -2424,6 +2424,9 @@ subroutine activate_modal_ARG(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    else
 
       !        single updraft
+
+      ! write(6,*)'Single updraft confirmed!' ! Ingvild Aukan 18/10/2024: Putting in a test to make sure my ARG run uses default single updraft
+
       wnuc=wbar+wdiab
 
       if(wnuc.gt.0._r8)then
