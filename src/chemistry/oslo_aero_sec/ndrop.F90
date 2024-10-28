@@ -1042,35 +1042,60 @@ subroutine dropmixnuc( &
       end if
    end do
    numberOfModes = m
-   press=287._r8*cs(i,k)*temp(i,k) ! For BN
+   !press=287._r8*cs(i,k)*temp(i,k) ! For BN (moved to before BN-calls)
 
          
-   
+!########### ARG: call 1 ###############################################################
    ! If aerosol_activation_scheme=ARG: 
    
    !++ MH_2015/04/10
+   !      !Call the activation procedure
+   !      if(numberOfModes .gt. 0)then
+	!	    if (use_hetfrz_classnuc) then
+   !            call activate_modal_ARG( &
+   !            wbar, wmix, wdiab, wmin, wmax,                       &
+   !            temp(i,k), cs(i,k), naermod, numberOfModes,          &
+   !            vaerosol, hygro, lnsigman,      &
+   !            fn_in(i,k,1:nmodes), fm, fluxn,                      &
+   !            fluxm,flux_fullact(k)                                &
+   !            )
+   !         else                                                          ! IA 11/9/24 Question: This else is for if use_hetfrz_classnuc. Why is the else without 1:nmodes when not use_hetfrz_classnuc?
+   !            call activate_modal_ARG( &
+   !            wbar, wmix, wdiab, wmin, wmax,                       &
+   !            temp(i,k), cs(i,k), naermod, numberOfModes,          &
+   !            vaerosol, hygro, lnsigman,    &
+   !            fn, fm, fluxn,                      &
+   !            fluxm,flux_fullact(k)                                &
+   !            )
+   !         end if
+	!     !-- MH_2015/04/10
+   !      endif
+   !endif aerosol_activation_scheme=ARG
+!########## end ARG: call 1 ###########################################################
+
+
+!########### BN: call 1 ###############################################################
+   !If aerosol_activation_scheme=BN:
+
+   press=287._r8*cs(i,k)*temp(i,k) ! For BN
+
+
          !Call the activation procedure
          if(numberOfModes .gt. 0)then
-		    if (use_hetfrz_classnuc) then
-               call activate_modal_ARG( &
+		      if (use_hetfrz_classnuc) then
+               call activate_modal_BN( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman,      &
+               vaerosol, hygro, lnsigman, DPGI(1:nmodes), press,     &
                fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
-            else                                                          ! IA 11/9/24 Question: This else is for if use_hetfrz_classnuc. Why is the else without 1:nmodes when not use_hetfrz_classnuc?
-               call activate_modal_ARG( &
-               wbar, wmix, wdiab, wmin, wmax,                       &
-               temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman,    &
-               fn, fm, fluxn,                      &
-               fluxm,flux_fullact(k)                                &
-               )
-            end if
-	     !-- MH_2015/04/10
+           end if
+	     
          endif
-   !endif aerosol_activation_scheme=ARG
+
+
+!########## end BN: call 1 ######################################################################
 
             dumc = (cldn_tmp - cldo_tmp)
 
@@ -1198,31 +1223,61 @@ subroutine dropmixnuc( &
                   hygro(m) =    hygroscopicity(i,kp1,kcomp)
                   lnsigman(m) = lnsigma(i,kp1,kcomp)
                   speciesMap(m) = kcomp
+                  DPGI(m)=2._r8*numberMedianRadius(i,k,kcomp)
                end if
             end do
             numberOfModes = m
 
-         !++ MH_2015/04/10
-         if(numberOfModes .gt. 0)then
-		    if (use_hetfrz_classnuc) then
-               call activate_modal_ARG( &
-                  wbar, wmix, wdiab, wmin, wmax,                       &
-                  temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman,    &
-                  fn_in(i,k,:), fm, fluxn,                      &
-                  fluxm, flux_fullact(k)                       &
-                   )
-            else
-               call activate_modal_ARG( &
-                  wbar, wmix, wdiab, wmin, wmax,                       &
-                  temp(i,k), cs(i,k), naermod, numberOfModes , &
-                  vaerosol, hygro, lnsigman,    &
-                  fn, fm, fluxn,                      &
-                  fluxm, flux_fullact(k)                       &
-                   )
-            end if
+         
+!########### ARG: call 2 ###############################################################
+   ! If aerosol_activation_scheme=ARG: 
+   !      !++ MH_2015/04/10
+   !      if(numberOfModes .gt. 0)then
+	!	    if (use_hetfrz_classnuc) then
+   !            call activate_modal_ARG( &
+   !               wbar, wmix, wdiab, wmin, wmax,                       &
+   !               temp(i,k), cs(i,k), naermod, numberOfModes , &
+   !               vaerosol, hygro, lnsigman,    &
+   !               fn_in(i,k,:), fm, fluxn,                      &
+   !               fluxm, flux_fullact(k)                       &
+   !                )
+   !         else
+   !            call activate_modal_ARG( &
+   !               wbar, wmix, wdiab, wmin, wmax,                       &
+   !               temp(i,k), cs(i,k), naermod, numberOfModes , &
+   !               vaerosol, hygro, lnsigman,    &
+   !               fn, fm, fluxn,                      &
+   !               fluxm, flux_fullact(k)                       &
+   !                )
+   !         end if
 		 !-- MH_2015/04/10
+   !      endif
+   !endif aerosol_activation_scheme=ARG
+!########## end ARG: call 2 ###########################################################
+
+
+!########### BN: call 2 ###############################################################
+   !If aerosol_activation_scheme=BN:
+
+   press=287._r8*cs(i,k)*temp(i,k) ! For BN
+
+
+         !Call the activation procedure
+         if(numberOfModes .gt. 0)then
+		      if (use_hetfrz_classnuc) then
+               call activate_modal_BN( &
+               wbar, wmix, wdiab, wmin, wmax,                       &
+               temp(i,k), cs(i,k), naermod, numberOfModes,          &
+               vaerosol, hygro, lnsigman, DPGI(1:nmodes), press,     &
+               fn_in(i,k,1:nmodes), fm, fluxn,                      &
+               fluxm,flux_fullact(k)                                &
+               )
+           end if
+	     
          endif
+
+
+!########## end BN: call 2 ######################################################################
 
             !Difference in cloud fraction this layer and above!
             !we are here because there are more clouds above, and some
@@ -2601,13 +2656,7 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
 
    !      numerical integration parameters
-   real(r8), parameter :: eps=0.3_r8,fmax=0.99_r8,sds=3._r8
 
-   real(r8), parameter :: namin=1.e6_r8   ! minimum aerosol number concentration (/m3)
-
-   integer ndist(nx)  ! accumulates frequency distribution of integration bins required
-   data ndist/nx*0/
-   save ndist
 
    fn(:)=0._r8
    fm(:)=0._r8
@@ -2640,299 +2689,39 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    CALL PDFACTIV (wbar,na,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
    
    ! -------------------------------------------------------------
-   ! IA 24/09/2024: Try to add use_hetfrz_classnuc stuff (l.1208 in original ndrop_BN)
 
-
-   if(nmode.eq.1.and.na(1).lt.1.e-20_r8)return
-
-   if(sigw.le.1.e-5_r8.and.wbar.le.0._r8)return
-
-   pres=rair*rhoair*tair
-   diff0=0.211e-4_r8*(p0/pres)*(tair/t0)**1.94_r8
-   conduct0=(5.69_r8+0.017_r8*(tair-t0))*4.186e2_r8*1.e-5_r8 ! convert to J/m/s/deg
-   call qsat(tair, pres, es, qs)
-   dqsdt=latvap/(rh2o*tair*tair)*qs
-   alpha=gravit*(latvap/(cpair*rh2o*tair*tair)-1._r8/(rair*tair))
-   gamma=(1.0_r8+latvap/cpair*dqsdt)/(rhoair*qs)
-   etafactor2max=1.e10_r8/(alpha*wmaxf)**1.5_r8 ! this should make eta big if na is very small.
-
-   grow  = 1._r8/(rhoh2o/(diff0*rhoair*qs)  &
-           + latvap*rhoh2o/(conduct0*tair)*(latvap/(rh2o*tair) - 1._r8))
-   sqrtg = sqrt(grow)
-   beta  = 2._r8*pi*rhoh2o*grow*gamma
-
-   do m=1,nmode
-
-      if(volume(m).gt.1.e-39_r8.and.na(m).gt.1.e-39_r8)then
-         !            number mode radius (m)
-         !           write(iulog,*)'alogsig,volc,na=',alogsig(m),volc(m),na(m)
-
-         if(present(lnsigman))then
-            exp45logsig_var(m) = exp(4.5_r8*lnsigman(m)*lnsigman(m))
-            amcube(m)=(3._r8*volume(m)/(4._r8*pi*exp45logsig_var(m)*na(m)))  ! only if variable size dist
-            f1_var(m)          = 0.5_r8*exp(2.5_r8*lnsigman(m)*lnsigman(m))
-            f2_var(m)          = 1._r8 + 0.25_r8*lnsigman(m)
-         else
-            call endrun("Problem with variable std. dev")
-         endif
-
-         !           growth coefficent Abdul-Razzak & Ghan 1998 eqn 16
-         !           should depend on mean radius of mode to account for gas kinetic effects
-         !           see Fountoukis and Nenes, JGR2005 and Meskhidze et al., JGR2006
-         !           for approriate size to use for effective diffusivity.
-         etafactor2(m)=1._r8/(na(m)*beta*sqrtg)
-         if(hygro(m).gt.1.e-10_r8)then
-            smc(m)=2._r8*aten*sqrt(aten/(27._r8*hygro(m)*amcube(m))) ! only if variable size dist
-         else
-            smc(m)=100._r8
-         endif
-         !	    write(iulog,*)'sm,hygro,amcube=',smcrit(m),hygro(m),amcube(m)
+   !Flux parameterization 
+   ! -------------------------------------------------------------
+   if (use_hetfrz_classnuc) then
+            fn_in(i,k,1:nmodes)=0.0_r8
       else
-         smc(m)=1._r8
-         etafactor2(m)=etafactor2max ! this should make eta big if na is very small.
-      endif
-      lnsm(m)=log(smc(m)) ! only if variable size dist
-      !	 write(iulog,'(a,i4,4g12.2)')'m,na,amcube,hygro,sm,lnsm=', &
-      !                   m,na(m),amcube(m),hygro(m),sm(m),lnsm(m)
-   enddo
+            fn(m)=0.0_r8
+      end if
 
-   if(sigw.gt.1.e-5_r8)then ! spectrum of updrafts
-
-      wmax=min(wmaxf,wbar+sds*sigw)
-      wmin=max(wminf,-wdiab)
-      wmin=max(wmin,wbar-sds*sigw)
-      w=wmin
-      dwmax=eps*sigw
-      dw=dwmax
-      dfmax=0.2_r8
-      dfmin=0.1_r8
-      if (wmax <= w) return
-      do m=1,nmode
-         sumflxn(m)=0._r8
-         sumfn(m)=0._r8
-         fnold(m)=0._r8
-         sumflxm(m)=0._r8
-         sumfm(m)=0._r8
-         fmold(m)=0._r8
-      enddo
-      sumflx_fullact=0._r8
-
-      fold=0._r8
-      wold=0._r8
-      gold=0._r8
-
-      dwmin = min( dwmax, 0.01_r8 )
-      do n = 1, nx
-
-100      wnuc=w+wdiab ! WHAT? Ingvild 2/7/24
-         !           write(iulog,*)'wnuc=',wnuc
-         alw=alpha*wnuc
-         sqrtalw=sqrt(alw)
-         etafactor1=alw*sqrtalw
-
-         do m=1,nmode
-            eta(m)=etafactor1*etafactor2(m)
-            zeta(m)=twothird*sqrtalw*aten/sqrtg
-         enddo
-
-         call maxsat(zeta,eta,nmode,smc,smax &
-
-                     ,f1_var, f2_var         &
-
-                     )
-         !	      write(iulog,*)'w,smax=',w,smax
-
-         lnsmax=log(smax)
-
-
-         x=twothird*(lnsm(nmode)-lnsmax)/(sq2*lnsigman(nmode))
-
-         fnew=0.5_r8*(1._r8-erf(x))
-
-
-         dwnew = dw
-         if(fnew-fold.gt.dfmax.and.n.gt.1)then
-            !              reduce updraft increment for greater accuracy in integration
-            if (dw .gt. 1.01_r8*dwmin) then
-               dw=0.7_r8*dw
-               dw=max(dw,dwmin)
-               w=wold+dw
-               go to 100
+      fm(:)=0._r8
+      fluxn(:)=0._r8
+      fluxm(:)=0._r8
+      flux_fullact(k)=0._r8          
+      do m=1,numberOfModes  
+         if (use_hetfrz_classnuc) then
+              fn_in(i,k,m)=actfrac(m)
             else
-               dwnew = dwmin
-            endif
-         endif
+              fn(m)=actfrac(m)
+            end if
 
-         if(fnew-fold.lt.dfmin)then
-            !              increase updraft increment to accelerate integration
-            dwnew=min(1.5_r8*dw,dwmax)
-         endif
-         fold=fnew
+         fm(m)=mactfrac(m)
 
-         z=(w-wbar)/(sigw*sq2)
-         g=exp(-z*z)
-         fnmin=1._r8
-         xmincoeff=alogaten-twothird*(lnsmax-alog2)-alog3
-
-         do m=1,nmode
-            !              modal
-
-            x=twothird*(lnsm(m)-lnsmax)/(sq2*lnsigman(m))
-
-            fn(m)=0.5_r8*(1._r8-erf(x))
-            fnmin=min(fn(m),fnmin)
-            !               integration is second order accurate
-            !               assumes linear variation of f*g with w
-            fnbar=(fn(m)*g+fnold(m)*gold)
-
-            arg=x-1.5_r8*sq2*lnsigman(m)
-
-            fm(m)=0.5_r8*(1._r8-erf(arg))
-            fmbar=(fm(m)*g+fmold(m)*gold)
-            wb=(w+wold)
-            if(w.gt.0._r8)then
-               sumflxn(m)=sumflxn(m)+sixth*(wb*fnbar           &
-                  +(fn(m)*g*w+fnold(m)*gold*wold))*dw
-               sumflxm(m)=sumflxm(m)+sixth*(wb*fmbar           &
-                  +(fm(m)*g*w+fmold(m)*gold*wold))*dw
-            endif
-            sumfn(m)=sumfn(m)+0.5_r8*fnbar*dw
-            !	       write(iulog,'(a,9g10.2)')'lnsmax,lnsm(m),x,fn(m),fnold(m),g,gold,fnbar,dw=',lnsmax,lnsm(m),x,fn(m),fnold(m),g,gold,fnbar,dw
-            fnold(m)=fn(m)
-            sumfm(m)=sumfm(m)+0.5_r8*fmbar*dw
-            fmold(m)=fm(m)
-         enddo
-         !           same form as sumflxm but replace the fm with 1.0
-         sumflx_fullact = sumflx_fullact &
-            + sixth*(wb*(g+gold) + (g*w+gold*wold))*dw
-         !            sumg=sumg+0.5_r8*(g+gold)*dw
-         gold=g
-         wold=w
-         dw=dwnew
-         if (n > 1 .and. (w > wmax .or. fnmin > fmax)) exit
-         w=w+dw
-         if (n == nx) then
-            write(iulog,*)'do loop is too short in activate'
-            write(iulog,*)'wmin=',wmin,' w=',w,' wmax=',wmax,' dw=',dw
-            write(iulog,*)'wbar=',wbar,' sigw=',sigw,' wdiab=',wdiab
-            write(iulog,*)'wnuc=',wnuc
-            write(iulog,*)'na=',(na(m),m=1,nmode)
-            write(iulog,*)'fn=',(fn(m),m=1,nmode)
-            !   dump all subr parameters to allow testing with standalone code
-            !   (build a driver that will read input and call activate)
-            write(iulog,*)'wbar,sigw,wdiab,tair,rhoair,nmode='
-            write(iulog,*) wbar,sigw,wdiab,tair,rhoair,nmode
-            write(iulog,*)'na=',na
-            write(iulog,*)'volume=', (volume(m),m=1,nmode)
-            write(iulog,*)'hydro='
-            write(iulog,*) hygro
-            call endrun(subname)
-         end if
-
-      enddo
-
-      ndist(n)=ndist(n)+1
-      if(w.lt.wmaxf)then
-
-         !            contribution from all updrafts stronger than wmax
-         !            assuming constant f (close to fmax)
-         wnuc=w+wdiab
-
-         z1=(w-wbar)/(sigw*sq2)
-         z2=(wmaxf-wbar)/(sigw*sq2)
-         g=exp(-z1*z1)
-         integ=sigw*0.5_r8*sq2*sqpi*(erf(z2)-erf(z1))
-         !            consider only upward flow into cloud base when estimating flux
-         wf1=max(w,zero)
-         zf1=(wf1-wbar)/(sigw*sq2)
-         gf1=exp(-zf1*zf1)
-         wf2=max(wmaxf,zero)
-         zf2=(wf2-wbar)/(sigw*sq2)
-         gf2=exp(-zf2*zf2)
-         gf=(gf1-gf2)
-         integf=wbar*sigw*0.5_r8*sq2*sqpi*(erf(zf2)-erf(zf1))+sigw*sigw*gf
-
-         do m=1,nmode
-            sumflxn(m)=sumflxn(m)+integf*fn(m)
-            sumfn(m)=sumfn(m)+fn(m)*integ
-            sumflxm(m)=sumflxm(m)+integf*fm(m)
-            sumfm(m)=sumfm(m)+fm(m)*integ
-         enddo
-         !           same form as sumflxm but replace the fm with 1.0
-         sumflx_fullact = sumflx_fullact + integf
-         !            sumg=sumg+integ
-      endif
-
-
-      do m=1,nmode
-         fn(m)=sumfn(m)/(sq2*sqpi*sigw)
-         !            fn(m)=sumfn(m)/(sumg)
-         if(fn(m).gt.1.01_r8)then
-            write(iulog,*)'fn=',fn(m),' > 1 in activate'
-            write(iulog,*)'w,m,na,amcube=',w,m,na(m),amcube(m)
-            write(iulog,*)'integ,sumfn,sigw=',integ,sumfn(m),sigw
-            call endrun('activate')
-         endif
-         fluxn(m)=sumflxn(m)/(sq2*sqpi*sigw)
-         fm(m)=sumfm(m)/(sq2*sqpi*sigw)
-         !            fm(m)=sumfm(m)/(sumg)
-         if(fm(m).gt.1.01_r8)then
-            write(iulog,*)'fm=',fm(m),' > 1 in activate'
-         endif
-         fluxm(m)=sumflxm(m)/(sq2*sqpi*sigw)
-      enddo
-      !        same form as fluxm
-      flux_fullact = sumflx_fullact/(sq2*sqpi*sigw)
-
-   else
-
-      !        single updraft
-      wnuc=wbar+wdiab
-
-      if(wnuc.gt.0._r8)then
-
-         w=wbar
-         alw=alpha*wnuc
-         sqrtalw=sqrt(alw)
-         etafactor1=alw*sqrtalw
-
-         do m=1,nmode
-            eta(m)=etafactor1*etafactor2(m)
-            zeta(m)=twothird*sqrtalw*aten/sqrtg
-
-            if(present(lnsigman))then
-               f1_var(m)          = 0.5_r8*exp(2.5_r8*lnsigman(m)*lnsigman(m))
-               f2_var(m)          = 1._r8 + 0.25_r8*lnsigman(m)
+         if(wbar.gt.0._r8)then
+             fluxn(m)=actfrac(m)*wbar
+             fluxm(m)=mactfrac(m)*wbar
             else
-               call endrun("Problem with variable std. dev single updraft")
-             endif
-
-         enddo
-
-         call maxsat(zeta,eta,nmode,smc,smax,f1_var, f2_var)
-
-         lnsmax=log(smax)
-         xmincoeff=alogaten-twothird*(lnsmax-alog2)-alog3
-
-
-         do m=1,nmode
-
-            x=twothird*(lnsm(m)-lnsmax)/(sq2*lnsigman(m))
-
-            fn(m)=0.5_r8*(1._r8-erf(x))
-
-            arg=x-1.5_r8*sq2*lnsigman(m)
-
-            fm(m)=0.5_r8*(1._r8-erf(arg))
-            if(wbar.gt.0._r8)then
-               fluxn(m)=fn(m)*w
-               fluxm(m)=fm(m)*w
-            endif
-         enddo
-         flux_fullact = w
-      endif
-
-   endif
+             fluxn(m)=0._r8
+             fluxm(m)=0._r8 
+           endif
+         end do
+         if (wbar.gt.0.0_r8) &
+            flux_fullact(k)=wbar  
+  
 
 end subroutine activate_modal_BN
 
