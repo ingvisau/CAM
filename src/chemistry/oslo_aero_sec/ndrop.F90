@@ -150,20 +150,6 @@ subroutine ndrop_readnl(nlfile)
       close(unitn)
    end if
 
-#ifdef SPMD
-   ! Broadcast namelist variable
-   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme),  &
-        mpi_character, masterprocid, mpicom, ierr)
-   if (ierr /= 0) then
-      call endrun(subname // ': FATAL: mpi_bcast: aerosol_activation_scheme')
-   end if
-   call mpi_bcast(aerosol_diagnostic_activation,                              &
-        len(aerosol_diagnostic_activation), mpi_character,                    &
-        masterprocid, mpicom, ierr)
-   if (ierr /= 0) then
-      call endrun(subname // ': FATAL: mpi_bcast: aerosol_diagnostic_activation')
-   end if
-#endif
 
 end subroutine ndrop_readnl
 
@@ -854,56 +840,14 @@ subroutine dropmixnuc( &
                else
                   componentFraction = componentFractionOK(k,m,getTracerIndex(m,l,.false.))
                endif
-#ifdef EXTRATESTS
-            if(i .eq. iDebug .and. getTracerIndex(m,l,.false.) .eq. lDebug)then
-               !print*,"componentFraction", i,cnst_name(oslo_cnst_idx(m,l)),componentFraction
-               print*,"assigning cloud/aerosol", k,m,l,qqcw(mm)%fld(i,k), raer(mm)%fld(i,k) &
-                     ,componentFraction
-               debugSumFraction(k) = debugSumFraction(k) + componentFraction
-            endif
-            if(componentFraction > 1.0_r8)then
-               print*, "wrong component fraction", componentFraction
-               stop
-               call endrun("wrong component fraction")
-            endif
-#endif
+
                !Assign to the components used here i.e. distribute condensate/coagulate to modes
                raercol_cw(k,mm,nsav) = qqcw(mm)%fld(i,k)*componentFraction
                raercol(k,mm,nsav)    = raer(mm)%fld(i,k)*componentFraction
             enddo ! k (levels)
          end do   ! l (species)
       end do      ! m (modes)
-#ifdef EXTRATESTS
-     do k=top_lev,pver
-      if(i .eq. iDebug .and. (abs(debugSumFraction(k)-1.0_r8).gt.1.e-2_r8) .and. debugSumFraction(k).gt.1.e-6_r8)then
-         print*, "debugSumFraction", cnst_name(getTracerIndex(m,l,.false.)),i, k, debugSumFraction(k), abs(debugSumFraction(k)-1.0_r8)
-         componentFraction=0.0_r8
-         do m=1,nbmodes
-            componentFraction = componentFraction + cam(i,k,m)
-            print*, "MODECONC", m, cam(i,k,m), numberConcentration(i,k,m)
-         end do
-         print*, "CS, sumCAM", CProcessModes(i,k), sum(cam(i,k,1:nbmodes)), componentFraction
-         print*, "q (cond)", state%q(i,k,lDebug)*cs(i,k)!mass in q
-         print*, "q (aq) " ,state%q(i,k,l_so4_a2)*cs(i,k)
-         print*, "bulk fractions", f_so4_cond(i,k),f_c(i,k), f_bc(i,k), f_aq(i,k)
-         !print*, "other levels", debugSumFraction(:)
-         do m=1,nmodes
-            do l=1,nspec_amode(m)
-               if(getTracerIndex(m,l,.false.) == ldebug)then
-                  if(m .gt. nbmodes)then
-                     componentFraction = 1.0_r8
-                  else
-                     componentFraction = componentFractionOK(k,m,getTracerIndex(m,l,.false.))
-                  endif
-                  print*, "nmode, l,k, ", m,l,k , lDebug, componentFraction, cam(i,k,m), f_aqm(i,k,m), f_acm(i,k,m), f_so4_condm(i,k,m)
-                  print*, "fraction2 ", cam(i,k,m), cam(i,k,m)/CProcessModes(i,k)*100.0_r8, " %"
-               endif
-            enddo
-         enddo
-         call endrun("wrong debugsumfraction")
-      endif  !idebug/ldebug
-     enddo
-#endif
+
 
 
 
@@ -997,11 +941,7 @@ subroutine dropmixnuc( &
                   dact    = raercol_cw(k,mm,nsav)*dumc
                   raercol_cw(k,mm,nsav) = raercol_cw(k,mm,nsav) + dact  ! cloud-borne aerosol
                   raercol(k,mm,nsav)    = raercol(k,mm,nsav) - dact
-#ifdef EXTRATESTS
-              if(i.eq. iDebug .and. getTracerIndex(m,l,.false.).eq.lDebug)then
-               print*,"decaying cloud", k, dact, cldn_tmp, cldo_tmp
-              endif
-#endif
+
                end do
             end do
          end if
@@ -1086,7 +1026,7 @@ subroutine dropmixnuc( &
                call activate_modal_BN( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI(1:nmodes), press,     &
+               vaerosol, hygro, lnsigman, DPGI, press,     &
                fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
@@ -1151,12 +1091,7 @@ subroutine dropmixnuc( &
 
                   raercol_cw(k,mm,nsav) = raercol_cw(k,mm,nsav) + dact  ! cloud-borne aerosol
                   raercol(k,mm,nsav)    = raercol(k,mm,nsav) - dact
-#ifdef EXTRATESTS
-              if(i.eq.iDebug .and. getTracerIndex(m,l,.false.).eq.lDebug)then
-               print*,"growing cloud (new/old)", k, raercol_cw(k,mm,nsav), raercol_cw(k,mm,nsav)-dact &
-                                                   ,raercol(k,mm,nsav),raercol(k,mm,nsav)+dact,dact
-              endif
-#endif
+
                enddo
             enddo
          endif  ! cldn_tmp-cldo_tmp > 0.01_r8
@@ -1268,7 +1203,7 @@ subroutine dropmixnuc( &
                call activate_modal_BN( &
                wbar, wmix, wdiab, wmin, wmax,                       &
                temp(i,k), cs(i,k), naermod, numberOfModes,          &
-               vaerosol, hygro, lnsigman, DPGI(1:nmodes), press,     &
+               vaerosol, hygro, lnsigman, DPGI, press,     &
                fn_in(i,k,1:nmodes), fm, fluxn,                      &
                fluxm,flux_fullact(k)                                &
                )
@@ -1377,11 +1312,7 @@ subroutine dropmixnuc( &
                end do
                srcn(k)      = srcn(k) + fluxntot/(cs(i,k)*dz(i,k))
                nsource(i,k) = nsource(i,k) + fluxntot/(cs(i,k)*dz(i,k))
-#ifdef EXTRATESTS
-            if(fluxntot/(cs(i,k)*dz(i,k)) > 0.0_r8 )then
-               print*,"activated/available(from below)",i,k,m,fluxntot/(cs(i,k)*dz(i,k))  
-            endif
-#endif
+
             endif  ! (cldn(i,k) - cldn(i,kp1) > 0.01 .or. k == pver)
 
          else  ! i.e: cldn(i,k) < 0.01_r8
@@ -1403,11 +1334,7 @@ subroutine dropmixnuc( &
 
                   do l = 1, nspec_amode(m)
                      mm = mam_idx(m,l)
-#ifdef EXTRATESTS
-                 if(i.eq.iDebug .and. getTracerIndex(m,l,.false.).eq.lDebug)then
-                  print*,"no cloud", k,  raercol(k,mm,nsav) , raercol_cw(k,mm,nsav)
-                 endif
-#endif
+
                      raercol(k,mm,nsav)    = raercol(k,mm,nsav) + raercol_cw(k,mm,nsav) ! cloud-borne aerosol
                      raercol_cw(k,mm,nsav) = 0._r8
                   end do
@@ -1521,16 +1448,7 @@ subroutine dropmixnuc( &
           mact_tracer(:,lptr2) = mact_tracer(:,lptr2) + mact(:,m)*raercol(:,mm,nnew)
           mfullact_tracer(:,lptr2) = mfullact_tracer(:,lptr2) + raercol(:,mm,nnew)
 
-#ifdef EXTRATESTS
-          if(lptr.eq.lDebug .and. i.eq.iDebug)then
-             do k=pver,top_lev,-1
-               print*, "assigning to tracer space",lptr, raercol(k,mm,nnew) &
-                        , raercol_tracer(k,lptr2,nnew) &
-                        , raercol_cw(k,mm,nnew) &
-                        , raercol_cw_tracer(k,lptr2,nnew)
-             end do
-          end if
-#endif
+
        end do !l
     end do    !m
 
@@ -1634,19 +1552,7 @@ subroutine dropmixnuc( &
                overlapm, raercol_tracer(:,lptr2,nsav), zero, flxconv, pver, &
                dtmix, .true., raercol_cw_tracer(:,lptr2,nsav))
 
-#ifdef EXTRATESTS
-            lptr = aerosolTracerList(lptr2)
-            if(i.eq.iDebug .and. lptr.eq.lDebug)then
-               print*, "bugeds for ",trim(cnst_name(lptr)), n, nsubmix
-               do k=pver,1,-1
-                  print*, "source (aerosol/cloud) ",k, raercol_cw_tracer(k,lptr2,nnew),raercol_cw_tracer(k,lptr2,nsav) &
-                        , raercol_tracer(k,lptr2,nnew),raercol_tracer(k,lptr2,nsav),source(k)
-               end do
-               if(m .le. nbmodes)then
-                  print*, " ", mm, lptr, componentFractionOK(k,m,getTracerIndex(m,l,.false.))
-               endif
-            endif
-#endif
+
          end do !Number of aerosol tracers
       end do ! old_cloud_nsubmix_loop
 
@@ -1711,91 +1617,13 @@ subroutine dropmixnuc( &
       end do
       ndropcol(i) = ndropcol(i)/gravit
 
-#ifdef EXTRATESTS
-      print*, "tendnd (#/kg/sec)", minval(tendnd(i,:)), maxval(tendnd(i,:))
-#endif
+
 
       if (prog_modal_aero) then
 
 
 
-#ifdef MASS_BALANCE_CHECK
-      !test for correct transfer between in-cloud / no-cloud..
-      newCloud(:,:) = 0.0_r8
-      oldCloud(:,:) = 0.0_r8
-      newAerosol(:,:) = 0.0_r8   
-      oldAerosol(:,:) = 0.0_r8
-      deltaCloud(:,:) = 0.0_r8
-      !Check mass balances #2 (all new cloud droplet species are taken from aerosols or from layer below
-      do k=pver,1,-1
-         mixRatioToMass = cs(i,k)*dz(i,k)
-         !First sum up cloud tracer in this layer
-         tendencyCounted(:)=.FALSE.
-         do m=1,ntot_amode
-            do l=1,nspec_amode(m)
-               mm = mam_idx(m,l)
-               lptr = getTracerIndex(m,l,.false.) !lptr occurs several times
-               newCloud(k, lptr)  = newCloud(k, lptr) + raercol_cw(k, mm, nnew)*mixRatioToMass
-               newAerosol(k, lptr) = newAerosol(k, lptr) + raercol(k,mm,nnew)*mixRatioToMass
-               if(.NOT. tendencyCounted(lptr))then
-                  oldAerosol(k, lptr) = raer(mm)%fld(i,k)*mixRatioToMass
-                  oldCloud(k, lptr)  = qqcw(mm)%fld(i,k)*mixRatioToMass
-                  tendencyCounted(lptr)=.TRUE.
-               endif
-            enddo
-         enddo
-      enddo! k
-      
-      k = pver
-      !Check imbalance in bottom layer
 
-      !Any change in cloud species is either from aerosol concentration or from change in layer below
-      do m=1,ntot_amode
-         do l=1,nspec_amode(m)
-            lptr = getTracerIndex(m,l,.false.)
-
-            !This is the mass which must go to layer above!
-            deltaCloud(k,lptr) = (oldAerosol(k,lptr) - newAerosol(k,lptr)) &!used to create cloud species
-                           -(newCloud(k,lptr) - oldCloud(k,lptr))    !created cloud species
-         enddo
-      enddo
-
-      !if "deltaCloud" is positive in layer below it means that some aerosol species were sent up
-      
-      !Move upwards
-      do k=pver-1,1,-1
-         kp1 = k + 1
-         do m=1,ntot_amode
-            do l=1,nspec_amode(m)
-               lptr = getTracerIndex(m,l,.false.)
-               deltaCloud(k,lptr) = (oldAerosol(k,lptr)-newAerosol(k,lptr)) & !used to create cloud species
-                           -   (newCloud(k,lptr) - oldCloud(k,lptr))    & !created cloud species
-                           -   0.0_r8 ! deltaCloud(kp1,lptr)                      !species received from below 
-            enddo
-         enddo
-      enddo !layers
-
-      stopMe = .FALSE.
-      tendencyCounted(:) = .FALSE.
-      do m=1,ntot_amode
-         do l=1,nspec_amode(m)
-            lptr= getTracerIndex(m,l,.false.)
-            if(abs(sum(deltaCloud(:,lptr))) > 1.e-8_r8 .and. (.NOT. tendencyCounted(lptr)))then
-               stopMe = .TRUE.
-               lptr2 = lptr
-               print*, "wrong mass budget",i,lptr,cnst_name(lptr), sum(deltaCloud(:,lptr))
-            endif
-            tendencyCounted(lptr) = .TRUE.
-         enddo
-      enddo
-      if(stopMe)then
-         print*,"error in species : ", cnst_name(lptr2)
-         do k=pver,1,-1
-            print*, "budgets new/old ",k, newCloud(k,lptr2),oldCloud(k,lptr2),newaerosol(k,lptr2),oldAerosol(k,lptr2), deltaCloud(k,lptr2)
-         enddo 
-         call endrun ("wrong mass budget in column")
-      endif
-#endif
 
          raertend = 0._r8
          qqcwtend = 0._r8
@@ -1868,55 +1696,7 @@ subroutine dropmixnuc( &
       end do    !modes
 
 
-#ifdef MASS_BALANCE_CHECK
-      !Check mass balances (all removed should be in tendencies)
-      massBalance(:,:) = 0.0_r8
-      newMass(:,:) = 0.0_r8
-      do m=1,ntot_amode
-         do l=1,nspec_amode(m)
-            mm = mam_idx(m,l)  !unique index, for example sulfate condendsate in "x mode" or sulf cond in "y mode"
-            lptr = getTracerIndex(m,l,.false.)
-            !add up all new values for this tracer
-            newMass(top_lev:pver,lptr) = newMass(top_lev:pver,lptr) + raercol(top_lev:pver, mm,nnew)
-         enddo
-      enddo
-      tendencyCounted(:)=.FALSE.
-      do m=1,ntot_amode
-         do l=1,nspec_amode(m)
-            mm = mam_idx(m,l)
-            lptr = getTracerIndex(m,l,.false.)
-            if(.NOT. tendencyCounted(lptr))then
-               massBalance(top_lev:pver, lptr)  =   newMass(top_lev:pver,lptr) &
-                            - raer(mm)%fld(i,top_lev:pver) &     !previous value
-                            - ptend%q(i,top_lev:pver,lptr)/dtinv !added during time step 
-               tendencyCounted(lptr) = .TRUE.
-            endif
-         enddo
-      enddo
-      tendencyCounted(:) = .FALSE.
-      do m=1,ntot_amode
-         do l=1,nspec_amode(m)
-            lptr = getTracerIndex(m,l,.false.)
-            !Check for large deviation in mass balance for this tracer
-            if(.NOT. tendencyCounted(lptr) .and. &
-                  (maxval(massBalance(:,lptr)) > 1.e-30_r8 .or. minval(massBalance(:,lptr)) < -1.0e-30_r8))then
-               tendencyCounted(lptr) = .TRUE.
-               print*, "massBalance error", i, lptr, maxVal(massBalance(:,lptr)), minVal(massBalance(:,lptr))
-               if(maxVal(massBalance(:,lptr)) > 1.e-30_r8)then
-                  kCrit = maxLoc(massBalance(:,lptr),1)
-               else
-                  kCrit = minLoc(massBalance(:,lptr),1)
-               endif
-               print*, "massBalance error loc", massBalance(kCrit, lptr), newMass(kCrit,lptr), raer(mm)%fld(i,kCrit)
-               !If mass balance error is larger than 1.e-10 times new or original value ==> stop
-               if(abs(massBalance(kCrit,lptr)) .gt. 1.e-10_r8*raer(mm)%fld(i,kCrit) & 
-                  .and. abs(massBalance(kCrit,lptr)).gt.1.e-10_r8*newMass(kCrit,lptr) )then
-                  stop
-               endif
-            endif
-         enddo
-      enddo
-#endif
+
 
 
       end if  !prog_modal_aero
@@ -1935,18 +1715,7 @@ subroutine dropmixnuc( &
 
    end do  ! overall_main_i_loop
 
-#ifdef EXTRATESTS
-   !check reasonable values for ncldwtr!
-   do k=top_lev,pver
-      if(maxval(ncldwtr(:ncol,k)) .gt. 1.e20_r8)then
-         print*, "stopping (after dropmixnuc) wrong ncldwtr", maxloc(ncldwtr(:ncol,k))
-            do i=1,ncol
-               print*, "ncldwtr",i,k,ncldwtr(i,k)
-            enddo
-         call endrun("wrong ncldwtr (end of dropmixnuc)")
-      end if
-   end do !loop on layers
-#endif
+
 
    ! end of main loop over i/longitude ....................................
 
