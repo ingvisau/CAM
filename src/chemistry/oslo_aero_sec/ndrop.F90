@@ -2406,7 +2406,7 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
    ! IA 06/06/2024 -- BN variables
    !--------------------------------------------------------------
-  !integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here. Use nmode (?)
+   integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here. Use nmode (?)
    integer                          :: modtype(nmode) 
    real(r8)                         :: sigi(nmode)
    real(r8)                         :: A,B,ACCOM
@@ -2424,7 +2424,7 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
 
 
-   !      numerical integration parameters
+
 
 
    fn(:)=0._r8
@@ -2455,29 +2455,21 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
 
    ! IA 12/06/2024: Call to BN routine PDFACTIV
 
-   CALL PDFACTIV (wbar,na,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
+   CALL PDFACTIV(wbar,na,hygro_BN,A,B,ACCOM,SG,sigw,tair,press,NDACT,actfrac,mactfrac,nmode,SMAX_BN)
    
    ! -------------------------------------------------------------
 
    !Flux parameterization 
    ! -------------------------------------------------------------
-   if (use_hetfrz_classnuc) then
-            fn_in(i,k,1:nmodes)=0.0_r8
-      else
-            fn(m)=0.0_r8
-      end if
+
 
       fm(:)=0._r8
       fluxn(:)=0._r8
       fluxm(:)=0._r8
-      flux_fullact(k)=0._r8          
-      do m=1,numberOfModes  
-         if (use_hetfrz_classnuc) then
-              fn_in(i,k,m)=actfrac(m)
-            else
-              fn(m)=actfrac(m)
-            end if
+      flux_fullact=0._r8          
+      do m=1,nmode  
 
+         fn(m)=actfrac(m)
          fm(m)=mactfrac(m)
 
          if(wbar.gt.0._r8)then
@@ -2488,8 +2480,9 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
              fluxm(m)=0._r8 
            endif
          end do
+
          if (wbar.gt.0.0_r8) &
-            flux_fullact(k)=wbar  
+            flux_fullact=wbar  
   
 
 end subroutine activate_modal_BN
