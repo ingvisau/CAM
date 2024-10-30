@@ -2345,69 +2345,18 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    !    also, fluxm/flux_fullact gives fraction of aerosol mass flux
    !       that is activated
 
-   !      local
 
-   integer, parameter:: nx=200
-   integer iquasisect_option, isectional
-   real(r8) integ,integf
-   real(r8), parameter :: p0 = 1013.25e2_r8    ! reference pressure (Pa)
-   real(r8) xmin(nmode),xmax(nmode) ! ln(r) at section interfaces
-   real(r8) volmin(nmode),volmax(nmode) ! volume at interfaces
-   real(r8) tmass ! total aerosol mass concentration (g/cm3)
-   real(r8) sign(nmode)    ! geometric standard deviation of size distribution
-   real(r8) rm ! number mode radius of aerosol at max supersat (cm)
-   real(r8) pres ! pressure (Pa)
-   real(r8) path ! mean free path (m)
-   real(r8) diff ! diffusivity (m2/s)
-   real(r8) conduct ! thermal conductivity (Joule/m/sec/deg)
-   real(r8) diff0,conduct0
-   real(r8) es ! saturation vapor pressure
-   real(r8) qs ! water vapor saturation mixing ratio
-   real(r8) dqsdt ! change in qs with temperature
-   real(r8) dqsdp ! change in qs with pressure
-   real(r8) g ! thermodynamic function (m2/s)
-   real(r8) zeta(nmode), eta(nmode)
-   real(r8) lnsmax ! ln(smax)
-   real(r8) alpha
-   real(r8) gamma
-   real(r8) beta
-   real(r8) sqrtg
-   real(r8) :: amcube(nmode) ! cube of dry mode radius (m)
-   !++alfgr (ununsed) real(r8) :: smcrit(nmode) ! critical supersatuation for activation
-   real(r8) :: lnsm(nmode) ! ln(smcrit)
-   real(r8) smc(nmode) ! critical supersaturation for number mode radius
-   real(r8) sumflx_fullact
-   real(r8) sumflxn(nmode)
-   real(r8) sumflxm(nmode)
-   real(r8) sumfn(nmode)
-   real(r8) sumfm(nmode)
-   real(r8) fnold(nmode)   ! number fraction activated
-   real(r8) fmold(nmode)   ! mass fraction activated
-   real(r8) exp45logsig_var(nmode)  !variable std. dev (CAM-Oslo)
-   real(r8), target :: f1_var(nmode), f2_var(nmode)
-   real(r8) wold,gold
-   real(r8) alogam
-   real(r8) rlo,rhi,xint1,xint2,xint3,xint4
-   real(r8) wmin,wmax,w,dw,dwmax,dwmin,wnuc,dwnew,wb
-   real(r8) dfmin,dfmax,fnew,fold,fnmin,fnbar,fsbar,fmbar
-   real(r8) alw,sqrtalw
-   real(r8) smax
-   real(r8) x,arg
-   real(r8) xmincoeff,xcut,volcut,surfcut
-   real(r8) z,z1,z2,wf1,wf2,zf1,zf2,gf1,gf2,gf
-   real(r8) etafactor1,etafactor2(nmode),etafactor2max
-   real(r8) grow
-   character(len=*), parameter :: subname='activate_modal_BN'
-   integer m,n
+
+
 
    ! IA 06/06/2024 -- BN variables
    !--------------------------------------------------------------
+   integer                          :: m
    integer                          :: numberOfModes ! This is already in dropmixnuc, don't know if I need it here. Use nmode (?)
    integer                          :: modtype(nmode) 
    real(r8)                         :: sigi(nmode)
    real(r8)                         :: A,B,ACCOM
    real(r8)                         :: SG(nmode)
-   !real(r8)                         :: DPGI(nmodes) ! takem as input
    real(r8)                         :: NDACT 
    real(r8)                         :: SMAX_BN ! Changed name: SMAX->SMAX_BN, to distinguish from SMAX already existing for ARG
    real(r8)                         :: suma
@@ -2415,12 +2364,8 @@ subroutine activate_modal_BN(wbar, sigw, wdiab, wminf, wmaxf, tair, rhoair,  &
    real(r8)                         :: actfrac(nmode)
    real(r8)                         :: mactfrac(nmode)
    real(r8)                         :: hygro_BN(nmode) ! hygroscopicity of aerosol mode for BN
+   real(r8)                         :: press
    ! --------------------------------------------------------------
-
-
-
-
-
 
    fn(:)=0._r8
    fm(:)=0._r8
