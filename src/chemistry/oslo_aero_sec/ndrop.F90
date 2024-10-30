@@ -990,26 +990,26 @@ subroutine dropmixnuc( &
    
    !++ MH_2015/04/10
    !      !Call the activation procedure
-   !      if(numberOfModes .gt. 0)then
-	!	    if (use_hetfrz_classnuc) then
-   !            call activate_modal_ARG( &
-   !            wbar, wmix, wdiab, wmin, wmax,                       &
-   !            temp(i,k), cs(i,k), naermod, numberOfModes,          &
-   !            vaerosol, hygro, lnsigman,      &
-   !            fn_in(i,k,1:nmodes), fm, fluxn,                      &
-   !            fluxm,flux_fullact(k)                                &
-   !            )
-   !         else                                                          ! IA 11/9/24 Question: This else is for if use_hetfrz_classnuc. Why is the else without 1:nmodes when not use_hetfrz_classnuc?
-   !            call activate_modal_ARG( &
-   !            wbar, wmix, wdiab, wmin, wmax,                       &
-   !            temp(i,k), cs(i,k), naermod, numberOfModes,          &
-   !            vaerosol, hygro, lnsigman,    &
-   !            fn, fm, fluxn,                      &
-   !            fluxm,flux_fullact(k)                                &
-   !            )
-   !         end if
-	!     !-- MH_2015/04/10
-   !      endif
+         if(numberOfModes .gt. 0)then
+		    if (use_hetfrz_classnuc) then
+               call activate_modal_ARG( &
+               wbar, wmix, wdiab, wmin, wmax,                       &
+               temp(i,k), cs(i,k), naermod, numberOfModes,          &
+               vaerosol, hygro, lnsigman,      &
+               fn_in(i,k,1:nmodes), fm, fluxn,                      &
+               fluxm,flux_fullact(k)                                &
+               )
+            else                                                          ! IA 11/9/24 Question: This else is for if use_hetfrz_classnuc. Why is the else without 1:nmodes when not use_hetfrz_classnuc?
+               call activate_modal_ARG( &
+               wbar, wmix, wdiab, wmin, wmax,                       &
+               temp(i,k), cs(i,k), naermod, numberOfModes,          &
+               vaerosol, hygro, lnsigman,    &
+               fn, fm, fluxn,                      &
+               fluxm,flux_fullact(k)                                &
+               )
+            end if
+	     !-- MH_2015/04/10
+         endif
    !endif aerosol_activation_scheme=ARG
 !########## end ARG: call 1 ###########################################################
 
@@ -1166,27 +1166,27 @@ subroutine dropmixnuc( &
          
 !########### ARG: call 2 ###############################################################
    ! If aerosol_activation_scheme=ARG: 
-   !      !++ MH_2015/04/10
-   !      if(numberOfModes .gt. 0)then
-	!	    if (use_hetfrz_classnuc) then
-   !            call activate_modal_ARG( &
-   !               wbar, wmix, wdiab, wmin, wmax,                       &
-   !               temp(i,k), cs(i,k), naermod, numberOfModes , &
-   !               vaerosol, hygro, lnsigman,    &
-   !               fn_in(i,k,:), fm, fluxn,                      &
-   !               fluxm, flux_fullact(k)                       &
-   !                )
-   !         else
-   !            call activate_modal_ARG( &
-   !               wbar, wmix, wdiab, wmin, wmax,                       &
-   !               temp(i,k), cs(i,k), naermod, numberOfModes , &
-   !               vaerosol, hygro, lnsigman,    &
-   !               fn, fm, fluxn,                      &
-   !               fluxm, flux_fullact(k)                       &
-   !                )
-   !         end if
+         !++ MH_2015/04/10
+         if(numberOfModes .gt. 0)then
+		    if (use_hetfrz_classnuc) then
+               call activate_modal_ARG( &
+                  wbar, wmix, wdiab, wmin, wmax,                       &
+                  temp(i,k), cs(i,k), naermod, numberOfModes , &
+                  vaerosol, hygro, lnsigman,    &
+                  fn_in(i,k,:), fm, fluxn,                      &
+                  fluxm, flux_fullact(k)                       &
+                   )
+            else
+               call activate_modal_ARG( &
+                  wbar, wmix, wdiab, wmin, wmax,                       &
+                  temp(i,k), cs(i,k), naermod, numberOfModes , &
+                  vaerosol, hygro, lnsigman,    &
+                  fn, fm, fluxn,                      &
+                  fluxm, flux_fullact(k)                       &
+                   )
+            end if
 		 !-- MH_2015/04/10
-   !      endif
+         endif
    !endif aerosol_activation_scheme=ARG
 !########## end ARG: call 2 ###########################################################
 
