@@ -117,7 +117,7 @@ logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero t
 
 ! Aerosol activation
 character(len=4) :: aerosol_activation_scheme = 'none'
-character(len=4) :: aerosol_diagnostic_activation = 'none'
+logical :: aerosol_diagnostic_activation = .false.
 
 !===============================================================================
 contains
@@ -125,12 +125,10 @@ contains
 
 subroutine ndrop_readnl(nlfile)
 
-   use spmd_utils,     only: mpi_character, masterprocid, mpicom
+   use spmd_utils,     only: mpi_character, mpi_logical, masterprocid, mpicom
    use namelist_utils, only: find_group_name
-   use mpi,            only: mpi_character, mpi_logical, mpi_integer
    use mpi,            only: mpi_bcast, MPI_SUCCESS
    use spmd_utils,     only: masterproc, mstrid=>masterprocid, mpicom
-   use string_utils,   only: int2str
    use namelist_utils, only: find_group_name
    use cam_abortutils, only: endrun
    use cam_logfile,    only: iulog
@@ -160,8 +158,8 @@ subroutine ndrop_readnl(nlfile)
    end if
 
    ! Broadcast nl-variables (IA: add error-function?)
-   call MPI_Bcast(aerosol_activation_scheme, 1, mpi_character)
-   call MPI_Bcast(aerosol_diagnostic_activation, 1, mpi_character)
+   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character)
+   call mpi_bcast(aerosol_diagnostic_activation, 1, mpi_logical)
 
 
    ! Report the settings
