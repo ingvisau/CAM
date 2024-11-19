@@ -160,8 +160,8 @@ subroutine ndrop_readnl(nlfile)
    end if
 
    ! Broadcast nl-variables (IA: add error-function?)
-   call MPI_Bcast(aerosol_activation_scheme, 1, mpi_logical)
-   call MPI_Bcast(aerosol_diagnostic_activation, 1, mpi_logical)
+   call MPI_Bcast(aerosol_activation_scheme, 1, mpi_character)
+   call MPI_Bcast(aerosol_diagnostic_activation, 1, mpi_character)
 
 
    ! Report the settings
