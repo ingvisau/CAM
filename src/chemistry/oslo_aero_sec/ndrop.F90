@@ -127,6 +127,13 @@ subroutine ndrop_readnl(nlfile)
 
    use spmd_utils,     only: mpi_character, masterprocid, mpicom
    use namelist_utils, only: find_group_name
+   use mpi,            only: mpi_character, mpi_logical, mpi_integer
+   use mpi,            only: mpi_bcast, MPI_SUCCESS
+   use spmd_utils,     only: masterproc, mstrid=>masterprocid, mpicom
+   use string_utils,   only: int2str
+   use namelist_utils, only: find_group_name
+   use cam_abortutils, only: endrun
+   use cam_logfile,    only: iulog
 
    character(len=*), intent(in) :: nlfile  ! filepath for file containing namelist input
 
@@ -136,6 +143,8 @@ subroutine ndrop_readnl(nlfile)
 
    namelist /ndrop_nl/ aerosol_activation_scheme,                          &
         aerosol_diagnostic_activation
+
+   
    !-----------------------------------------------------------------------------
 
    if (masterproc) then
@@ -150,6 +159,19 @@ subroutine ndrop_readnl(nlfile)
       close(unitn)
    end if
 
+   ! Broadcast nl-variables (IA: add error-function?)
+   call MPI_Bcast(aerosol_activation_scheme, 1, mpi_logical)
+   call MPI_Bcast(aerosol_diagnostic_activation, 1, mpi_logical)
+
+
+   ! Report the settings
+   if (masterproc) then
+      write(iulog ,*) 'Aerosol activation settings:'
+      write(iulog ,*) 'aerosol_activation_scheme      =', aerosol_activation_scheme
+      if (aerosol_diagnostic_activation) then
+         write(iulog ,*) 'aerosol_diagnostic_activation     =', aerosol_diagnostic_activation
+      end if
+   end if
 
 end subroutine ndrop_readnl
 
