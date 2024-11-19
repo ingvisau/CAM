@@ -127,7 +127,7 @@ subroutine ndrop_readnl(nlfile)
 
    use spmd_utils,     only: mpi_character, mpi_logical, masterprocid, mpicom
    use namelist_utils, only: find_group_name
-   use mpi,            only: mpi_bcast, MPI_SUCCESS
+   !use mpi,            only: mpi_bcast, MPI_SUCCESS
    use spmd_utils,     only: masterproc, mstrid=>masterprocid, mpicom
    use namelist_utils, only: find_group_name
    use cam_abortutils, only: endrun
@@ -158,8 +158,8 @@ subroutine ndrop_readnl(nlfile)
    end if
 
    ! Broadcast nl-variables (IA: add error-function?)
-   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character)
-   call mpi_bcast(aerosol_diagnostic_activation, 1, mpi_logical)
+   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, masterprocid, ierr)
+   call mpi_bcast(aerosol_diagnostic_activation, 1, mpi_logical, masterprocid, ierr)
 
 
    ! Report the settings
