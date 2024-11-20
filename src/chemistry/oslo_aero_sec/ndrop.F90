@@ -163,10 +163,11 @@ subroutine ndrop_readnl(nlfile)
    
 
    ! Broadcast nl-variables (IA: add error-function?)
-   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, masterprocid, ierr)
-   call mpi_bcast(aerosol_diagnostic_activation, len(aerosol_diagnostic_activation), mpi_character, masterprocid, ierr)
+   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, mpicom, ierr)
+   if (ierr /= 0) call endrun(sub//": FATAL: mpi_bcast: aerosol_activation_scheme")
+   call mpi_bcast(aerosol_diagnostic_activation, len(aerosol_diagnostic_activation), mpi_character, mpicom, ierr)
+   if (ierr /= 0) call endrun(sub//": FATAL: mpi_bcast: aerosol_diagnostic_activation")
 
-   call endrun(subname // ':: ERROR Ingvild ndrop_nl ')
 
 
    ! Report the settings
