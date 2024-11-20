@@ -117,7 +117,7 @@ logical :: lq(pcnst) = .false. ! set flags true for constituents with non-zero t
 
 ! Aerosol activation
 character(len=4) :: aerosol_activation_scheme = 'none'
-logical :: aerosol_diagnostic_activation = .false.
+character(len=4) :: aerosol_diagnostic_activation = 'none'
 
 !===============================================================================
 contains
@@ -145,6 +145,9 @@ subroutine ndrop_readnl(nlfile)
    
    !-----------------------------------------------------------------------------
 
+
+   call endrun(subname // ':: ERROR Ingvild ndrop_nl ')
+
    if (masterproc) then
       open(newunit=unitn, file=trim(nlfile), status='old' )
       call find_group_name(unitn, 'ndrop_nl', status=ierr)
@@ -159,16 +162,14 @@ subroutine ndrop_readnl(nlfile)
 
    ! Broadcast nl-variables (IA: add error-function?)
    call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, masterprocid, ierr)
-   call mpi_bcast(aerosol_diagnostic_activation, 1, mpi_logical, masterprocid, ierr)
+   call mpi_bcast(aerosol_diagnostic_activation, len(aerosol_diagnostic_activation), mpi_character, masterprocid, ierr)
 
 
    ! Report the settings
    if (masterproc) then
       write(iulog ,*) 'Aerosol activation settings:'
       write(iulog ,*) 'aerosol_activation_scheme      =', aerosol_activation_scheme
-      if (aerosol_diagnostic_activation) then
-         write(iulog ,*) 'aerosol_diagnostic_activation     =', aerosol_diagnostic_activation
-      end if
+      write(iulog ,*) 'aerosol_diagnostic_activation     =', aerosol_diagnostic_activation
    end if
 
 end subroutine ndrop_readnl
