@@ -146,7 +146,7 @@ subroutine ndrop_readnl(nlfile)
    !-----------------------------------------------------------------------------
 
 
-   call endrun(subname // ':: ERROR Ingvild ndrop_nl ')
+   
 
    if (masterproc) then
       open(newunit=unitn, file=trim(nlfile), status='old' )
@@ -159,6 +159,8 @@ subroutine ndrop_readnl(nlfile)
       end if
       close(unitn)
    end if
+
+   call endrun(subname // ':: ERROR Ingvild ndrop_nl ')
 
    ! Broadcast nl-variables (IA: add error-function?)
    call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, masterprocid, ierr)
