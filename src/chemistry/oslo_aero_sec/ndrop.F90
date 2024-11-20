@@ -125,13 +125,13 @@ contains
 
 subroutine ndrop_readnl(nlfile)
 
-   use spmd_utils,     only: mpi_character, mpi_logical, masterprocid, mpicom
    use namelist_utils, only: find_group_name
+   use units,           only: getunit, freeunit
    !use mpi,            only: mpi_bcast, MPI_SUCCESS
-   use spmd_utils,     only: masterproc, mstrid=>masterprocid, mpicom
+   use spmd_utils,     only: masterproc, mstrid=>masterprocid, mpicom, mpi_character, mpi_logical, masterprocid, mpicom
    use namelist_utils, only: find_group_name
-   use cam_abortutils, only: endrun
-   use cam_logfile,    only: iulog
+   !use cam_abortutils, only: endrun
+   !use cam_logfile,    only: iulog
 
    character(len=*), intent(in) :: nlfile  ! filepath for file containing namelist input
 
@@ -149,7 +149,8 @@ subroutine ndrop_readnl(nlfile)
    
 
    if (masterproc) then
-      open(newunit=unitn, file=trim(nlfile), status='old' )
+      unitn=getunit()
+      open(unitn, file=trim(nlfile), status='old' )
       call find_group_name(unitn, 'ndrop_nl', status=ierr)
       if (ierr == 0) then
          read(unitn, ndrop_nl , iostat=ierr)
@@ -158,15 +159,16 @@ subroutine ndrop_readnl(nlfile)
          end if
       end if
       close(unitn)
+      call freeunit(unitn)
    end if
 
    
 
-   ! Broadcast nl-variables (IA: add error-function?)
-   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, mpicom, ierr)
-   if (ierr /= 0) call endrun(subname //": FATAL: mpi_bcast: aerosol_activation_scheme")
-   call mpi_bcast(aerosol_diagnostic_activation, len(aerosol_diagnostic_activation), mpi_character, mpicom, ierr)
-   if (ierr /= 0) call endrun(subname //": FATAL: mpi_bcast: aerosol_diagnostic_activation")
+   ! Broadcast nl-variables 
+   call mpi_bcast(aerosol_activation_scheme, len(aerosol_activation_scheme), mpi_character, mstrid, mpicom, ierr)
+   if (ierr /= 0) call endrun(subname // ":: FATAL: mpi_bcast: aerosol_activation_scheme")
+   call mpi_bcast(aerosol_diagnostic_activation, len(aerosol_diagnostic_activation), mpi_character, mstrid, mpicom, ierr)
+   if (ierr /= 0) call endrun(subname // ":: FATAL: mpi_bcast: aerosol_diagnostic_activation")
 
 
 
